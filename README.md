@@ -1,5 +1,8 @@
 # CleanPHP framework
 
+[![PHP Version](https://img.shields.io/badge/php-%3E%3D8.1-blue)](https://www.php.net/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 ## Kratki opis / Short Description
 
 ### Hrvatski
