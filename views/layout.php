@@ -21,7 +21,6 @@
 
 use App\Core\App;
 use App\Core\I18n;
-use App\Core\Csrf;
 
 ?>
 <!DOCTYPE html>

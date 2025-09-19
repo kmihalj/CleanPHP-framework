@@ -228,12 +228,19 @@ if (($_SESSION['role'] ?? '') !== 'Admin') {
   <!-- Flash messages at bottom / Flash poruke na dnu -->
   <?php if ($msg = flash_get('success')): ?>
     <div class="container mt-4">
-      <div class="alert alert-success"><?= htmlspecialchars($msg) ?></div>
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <?= htmlspecialchars($msg) ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
     </div>
   <?php endif; ?>
+
   <?php if ($msg = flash_get('error')): ?>
     <div class="container mt-4">
-      <div class="alert alert-danger"><?= htmlspecialchars($msg) ?></div>
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <?= htmlspecialchars($msg) ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
     </div>
   <?php endif; ?>
 </div>

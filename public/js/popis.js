@@ -37,6 +37,13 @@
 const bootstrap = window.bootstrap;
 // HR: Pretpostavlja se da su csrfToken i showMessage definirani globalno.
 // EN: Assumes csrfToken and showMessage are defined globally.
+function getCellValue(tr, field) {
+  const td = tr.querySelector(`td[data-field="${field}"]`);
+  if (!td) return '';
+  const input = td.querySelector('input, select');
+  return input ? input.value.trim() : td.textContent.trim();
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   let currentEditingRow = null;
 
@@ -300,9 +307,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const tr = icon.closest('tr');
       if (!tr) return;
       resetUserId = tr.dataset.id;
-      const name = tr.querySelector('td[data-field="first_name"]').textContent.trim() + ' ' +
-        tr.querySelector('td[data-field="last_name"]').textContent.trim();
-      const email = tr.querySelector('td[data-field="email"]').textContent.trim();
+      const name = getCellValue(tr, 'first_name') + ' ' + getCellValue(tr, 'last_name');
+      const email = getCellValue(tr, 'email');
       const template = (window.translations && window.translations.reset_message)
         ? window.translations.reset_message
         : 'Korisniku "%s" će biti generirana nova lozinka i poslana mailom na adresu "%s".';
@@ -366,8 +372,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const tr = icon.closest('tr');
       if (!tr) return;
       deleteUserId = tr.dataset.id;
-      const firstName = tr.querySelector('td[data-field="first_name"]').textContent.trim();
-      const lastName = tr.querySelector('td[data-field="last_name"]').textContent.trim();
+      const firstName = getCellValue(tr, 'first_name');
+      const lastName  = getCellValue(tr, 'last_name');
       const template = (window.translations && window.translations.delete_message)
         ? window.translations.delete_message
         : 'Korisnik "%s %s" će biti obrisan.';
@@ -379,7 +385,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (form) {
         form.action = `${typeof deleteUrlBase !== 'undefined' ? deleteUrlBase : ''}/${deleteUserId}`;
       }
-
     });
   });
 

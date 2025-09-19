@@ -43,3 +43,15 @@ function showMessage(message, type = 'info') {
     wrapper.remove();
   }, 5000);
 }
+
+// Automatski sakrij postojeće alert poruke pri učitavanju stranice
+// Auto-hide existing alerts on page load
+document.addEventListener('DOMContentLoaded', () => {
+  const flashMessages = document.querySelectorAll('.alert');
+  flashMessages.forEach(alertEl => {
+    setTimeout(() => {
+      const alert = bootstrap.Alert.getInstance(alertEl) || new bootstrap.Alert(alertEl);
+      alert.close();
+    }, 5000); // automatski sakrij nakon 5 sekundi / auto-hide after 5 seconds
+  });
+});
