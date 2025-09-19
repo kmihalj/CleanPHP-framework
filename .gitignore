@@ -1,0 +1,21 @@
+# Composer dependencies
+/vendor/
+
+# IDE configuration
+/.idea/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary cache and sessions
+/tmp/
+.cache/
+
+# Local configuration files (use the .example.php versions instead)
+config/app.php
+config/database.php
+config/mail.php

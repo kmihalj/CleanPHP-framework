@@ -1,0 +1,19 @@
+{
+    "name": "cms/auth-skeleton-pdo",
+    "description": "PHP MVC auth skeleton with PDO, dynamic base, CSRF, middleware, auto-migration, HR collation, and literal-string i18n (_t).",
+    "type": "project",
+    "require": {
+        "php": ">=8.1",
+      "ext-pdo": "*",
+      "ext-openssl": "*",
+      "phpmailer/phpmailer": "^6.9"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    }
+}

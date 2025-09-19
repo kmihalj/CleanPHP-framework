@@ -1,0 +1,21 @@
+# ===========================
+#  Hrvatski (Croatian)
+# ===========================
+# .htaccess konfiguracija u public direktoriju.
+# - Omogućuje Apache mod_rewrite za pravilno rutiranje zahtjeva.
+# - Ako traženi resurs (datoteka ili direktorij) postoji, posluži ga direktno.
+# - Inače, preusmjeri sve zahtjeve na index.php (front controller).
+#
+# ===========================
+#  English
+# ===========================
+# .htaccess configuration in the public directory.
+# - Enables Apache mod_rewrite for proper request routing.
+# - If the requested resource (file or directory) exists, serve it directly.
+# - Otherwise, redirect all requests to index.php (the front controller).
+
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+RewriteRule ^ index.php [L]

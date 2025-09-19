@@ -1,0 +1,19 @@
+# ===========================
+#  Hrvatski (Croatian)
+# ===========================
+# .htaccess konfiguracija za aplikaciju.
+# - Omogućuje Apache mod_rewrite.
+# - Prvi RewriteRule preusmjerava root URL na direktorij public/.
+# - Drugi RewriteRule preusmjerava sve zahtjeve na public/ direktorij.
+#
+# ===========================
+#  English
+# ===========================
+# .htaccess configuration for the application.
+# - Enables Apache mod_rewrite.
+# - The first RewriteRule redirects the root URL to the public/ directory.
+# - The second RewriteRule redirects all requests to the public/ directory.
+
+RewriteEngine On
+RewriteRule ^$ public/ [L]
+RewriteRule ^(.*)$ public/$1 [L]
