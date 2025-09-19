@@ -159,6 +159,7 @@ if (($_SESSION['role'] ?? '') !== 'Admin') {
   </form>
   <script>
     // JavaScript messages and URL constants / JS poruke i URL konstante
+    const csrfToken = "<?= Csrf::token() ?>";
     const messages = {
       saved: "<?= _t('Podaci su spremljeni') ?>",
       error: "<?= _t('Greška pri spremanju') ?>",

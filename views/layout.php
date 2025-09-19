@@ -86,8 +86,5 @@ use App\Core\Csrf;
   <?= $content ?? '' ?>
 </main>
 <div id="flash-messages" class="container mt-2"></div>
-<script>
-  const csrfToken = "<?= Csrf::token() ?>";
-</script>
 </body>
 </html>
