@@ -1,4 +1,4 @@
-# Naslov projekta / Project Title
+# CleanPHP framework
 
 ## Kratki opis / Short Description
 
