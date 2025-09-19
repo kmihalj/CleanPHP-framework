@@ -7,18 +7,29 @@
 
 ### Hrvatski
 
-Minimalistički PHP MVC skeleton s ugrađenim auth modulom, server-side sort/paginacijom, inline uređivanjem (AJAX),
+
+Cilj je imati čist i proširiv kostur bez ikakvih ovisnosti, samo čisti PHP i HTML/CSS.
+
+Ovaj primjer je PHP MVC skeleton s ugrađenim auth modulom, server-side sort/paginacijom, inline uređivanjem (AJAX),
 resetom lozinke (PHPMailer), brisanje s modalom (POST + redirect), i18n, CSRF zaštitom te automatskim migracijama na
 temelju definicija u modelima (schema).
 
-Cilj je imati čist i proširiv kostur bez „teških“ ovisnosti — osim PHPMailera za slanje e-mailova.
+Javaskript je korišten
+samo na primjeru za model Users u svrhu inline uređivanja u tabeli, nije potrebno koristiti JavaScript ukoliko to ne
+želite, framework se može koristiti i samo sa čistim PHP+HTML tehnologijama.
+PHPMailer je dodan za slanje mailova korisnicima prilikom reseta lozinke, također nije nužan i ako ga ne trebate možete ga izbaciti.
+Da bi vidjeli Admin stranice u ovom primjeru potrebno je korisniku u bazi staviti rolu Admin, onda taj korisnik može iz sučelja
+drugim korisnicima dodjeljivati sve potrebne role.
 
 ### English
 
-A minimalist PHP MVC skeleton featuring a built-in authentication module, server-side sorting and pagination, inline editing via AJAX, password reset (PHPMailer), deletion with a modal (POST + redirect), i18n, CSRF protection, and automatic migrations based on model (schema) definitions.
+The goal is to provide a clean and extensible skeleton without any dependencies, using only pure PHP and HTML/CSS.
 
-The goal is to provide a clean and extensible foundation without "heavy" dependencies — except PHPMailer for sending emails.
+This example is a PHP MVC skeleton with a built-in authentication module, server-side sorting/pagination, inline editing (AJAX), password reset (PHPMailer), deletion with a modal (POST + redirect), i18n, CSRF protection, and automatic migrations based on model (schema) definitions.
 
+JavaScript is used only in the Users model example for inline table editing. You don’t need to use JavaScript if you don’t want to — the framework can be used purely with PHP+HTML technologies.
+PHPMailer is included for sending emails during password reset, but it is optional — if you don’t need it, you can remove it.
+To view the Admin pages in this example, you must assign the Admin role to a user in the database. That user can then assign roles to other users via the interface.
 ## Ključne značajke / Key Features
 
 ### Hrvatski
