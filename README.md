@@ -14,6 +14,8 @@ Ovaj primjer je PHP MVC skeleton s ugrađenim auth modulom, server-side sort/pag
 resetom lozinke (PHPMailer), brisanje s modalom (POST + redirect), i18n, CSRF zaštitom te automatskim migracijama na
 temelju definicija u modelima (schema).
 
+Autentikacija uključuje registraciju, prijavu, odjavu, promjenu lozinke, zaboravljenu lozinku (reset putem e-maila), hash lozinke i session-based auth.
+
 Javaskript je korišten
 samo na primjeru za model Users u svrhu inline uređivanja u tabeli, nije potrebno koristiti JavaScript ukoliko to ne
 želite, framework se može koristiti i samo sa čistim PHP+HTML tehnologijama.
@@ -27,6 +29,8 @@ The goal is to provide a clean and extensible skeleton without any dependencies,
 
 This example is a PHP MVC skeleton with a built-in authentication module, server-side sorting/pagination, inline editing (AJAX), password reset (PHPMailer), deletion with a modal (POST + redirect), i18n, CSRF protection, and automatic migrations based on model (schema) definitions.
 
+Authentication includes registration, login, logout, password change, forgotten password (reset via email), password hashing, and session-based authentication.
+
 JavaScript is used only in the Users model example for inline table editing. You don’t need to use JavaScript if you don’t want to — the framework can be used purely with PHP+HTML technologies.
 PHPMailer is included for sending emails during password reset, but it is optional — if you don’t need it, you can remove it.
 To view the Admin pages in this example, you must assign the Admin role to a user in the database. That user can then assign roles to other users via the interface.
@@ -36,7 +40,7 @@ To view the Admin pages in this example, you must assign the Admin role to a use
 
 - Čisti MVC (bez velikih frameworka korištenjem samo PHP-a, a u primjeru je i JavaScript radi AJAX-a)
 - Automatske migracije: modeli deklarativno definiraju schema() → skeleton kreira/usklađuje tablice
-- Autentikacija: registracija, prijava, odjava, hash lozinke, session-based auth
+- Autentikacija: registracija, prijava, odjava, promjena lozinke, zaboravljena lozinka (reset putem e-maila), hash lozinke, session-based auth
 - Middleware: npr. auth za zaštitu privatnih ruta; role-based zaštita (Admin) u view-u i/ili middleware-u
 - Ruter: GET/POST, parametri u putanji, imenovane rute (name()), grupe (npr. /admin), urlFor() helper
 - CSRF zaštita (hidden token u formama, validacija u kontroleru)
@@ -50,7 +54,7 @@ To view the Admin pages in this example, you must assign the Admin role to a use
 
 - Clean MVC (no large frameworks, using only PHP; JavaScript included in the example for AJAX)
 - Automatic migrations: models declaratively define schema(); the skeleton creates/updates tables accordingly
-- Authentication: registration, login, logout, password hashing, session-based authentication
+- Authentication: registration, login, logout, password change, forgotten password (reset via email), password hashing, session-based authentication
 - Middleware: e.g., auth for protecting private routes; role-based protection (Admin) in the view and/or middleware
 - Router: GET/POST, path parameters, named routes (name()), groups (e.g. /admin), urlFor() helper
 - CSRF protection (hidden token in forms, validation in controller)
@@ -92,7 +96,7 @@ To view the Admin pages in this example, you must assign the Admin role to a use
 │  └─ Models/             # User.php (schema, save, update, find, count, …)
 ├─ views/
 │  ├─ layout.php
-│  ├─ auth/ login.php, popis.php
+│  ├─ auth/ login.php, popis.php, promjenaLozinke.php, registracija.php, zaboravljenaLozinka.php
 │  └─ home/ index.php
 ├─ routes/
 │  └─ web.php             # Definicije ruta (imenovane, grupe, middleware)
@@ -121,7 +125,7 @@ To view the Admin pages in this example, you must assign the Admin role to a use
 │  └─ Models/             # User.php (schema, save, update, find, count, …)
 ├─ views/
 │  ├─ layout.php
-│  ├─ auth/ login.php, popis.php
+│  ├─ auth/ login.php, popis.php, promjenaLozinke.php, registracija.php, zaboravljenaLozinka.php
 │  └─ home/ index.php
 ├─ routes/
 │  └─ web.php             # Route definitions (named, groups, middleware)
@@ -250,6 +254,7 @@ Note: the current migrator covers CREATE and ADD COLUMN. RENAME/MODIFY columns a
   - Reset lozinke: 🔑 → modal → AJAX → mail korisniku (HTML + plain text)
   - Brisanje: 🗑️ → modal → POST + redirect (očuvanje sort/dir/page/per_page; fallback na prethodnu stranicu ako je
     zadnja ostala prazna)
+- Obrasci uključuju odvojeni login i registraciju, promjenu lozinke, zaboravljenu lozinku
 
 ### English
 
@@ -259,6 +264,7 @@ Note: the current migrator covers CREATE and ADD COLUMN. RENAME/MODIFY columns a
   - Inline edit: double-click on a field or ✏️ → input/select → AJAX save
   - Password reset: 🔑 → modal → AJAX → email to user (HTML + plain text)
   - Deletion: 🗑️ → modal → POST + redirect (preserves sort/dir/page/per_page; fallback to previous page if the last one is empty)
+- Forms include separate login and registration, password change, forgotten password
 
 ## E-mail (PHPMailer)
 
@@ -266,13 +272,13 @@ Note: the current migrator covers CREATE and ADD COLUMN. RENAME/MODIFY columns a
 
 - Konfiguracija u config/mail.php
 - Mailer wrapper klasa: slanje HTML i/ili plain text poruka
-- Reset lozinke šalje novu lozinku korisniku e-mailom
+- Reset i zaboravljena lozinka šalju novu lozinku korisniku e-mailom
 
 ### English
 
 - Configuration in config/mail.php
 - Mailer wrapper class: send HTML and/or plain text messages
-- Password reset sends a new password to the user via email
+- Password reset and forgotten password send a new password to the user via email
 
 ## Razvojne napomene / Development notes
 
