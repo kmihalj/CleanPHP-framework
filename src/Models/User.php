@@ -37,6 +37,41 @@ class User extends BaseModel
     'created_at' => ['type' => 'TIMESTAMP', 'default' => 'CURRENT_TIMESTAMP'],
   ];
 
+  /**
+   * Polja koja se spremaju u session / Fields to store in session
+   *
+   * @var array
+   */
+  protected array $sessionFields = ['user_id' => 'id', 'first_name', 'last_name', 'username', 'email', 'role'];
+
+  /**
+   * ===========================
+   *  Hrvatski (Croatian)
+   * ===========================
+   * Postavlja podatke korisnika u $_SESSION prema definiranim session poljima.
+   *
+   * ===========================
+   *  English
+   * ===========================
+   * Sets user data into $_SESSION according to the defined session fields.
+   *
+   * @param array $user Podaci korisnika / User data
+   * @return void
+   */
+  public function setSessionUserData(array $user): void
+  {
+      foreach ($this->sessionFields as $sessionKey => $userField) {
+          if (is_int($sessionKey)) {
+              // Numeric key, so $userField is both the session key and user array key
+              $sessionKey = $userField;
+          }
+          // $userField is the key in $user array
+          if (isset($user[$userField])) {
+              $_SESSION[$sessionKey] = $user[$userField];
+          }
+      }
+  }
+
   // Stvara novog korisnika, hashira lozinku i sprema u bazu. / Creates a new user, hashes the password, and saves it to the database.
   public function create(array $data): bool
   {
@@ -62,6 +97,30 @@ class User extends BaseModel
     $stmt->bindValue(':u', $username);
     $stmt->execute();
     $row = $stmt->fetch();
+    return $row ?: null;
+  }
+
+  /**
+   * ===========================
+   *  Hrvatski (Croatian)
+   * ===========================
+   * Dohvaća korisnika po email adresi.
+   *
+   * ===========================
+   *  English
+   * ===========================
+   * Retrieves a user by email address.
+   *
+   * @param string $email Email adresa korisnika / User email address
+   * @return array|null Podaci korisnika ili null ako ne postoji / User data or null if not found
+   */
+  public function findByEmail(string $email): ?array
+  {
+    $sql = "SELECT * FROM {$this->table} WHERE email = :e LIMIT 1";
+    $stmt = $this->pdo->prepare($sql);
+    $stmt->bindValue(':e', $email);
+    $stmt->execute();
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
     return $row ?: null;
   }
 
@@ -234,4 +293,28 @@ class User extends BaseModel
     }
     return $ok;
   }
+
+  /**
+   * ===========================
+   *  Hrvatski (Croatian)
+   * ===========================
+   * Briše sva korisnička polja definirana u $sessionFields iz $_SESSION.
+   *
+   * ===========================
+   *  English
+   * ===========================
+   * Removes all user fields defined in $sessionFields from $_SESSION.
+   *
+   * @return void
+   */
+  public function clearSessionUserData(): void
+  {
+      foreach ($this->sessionFields as $sessionKey => $userField) {
+          if (is_int($sessionKey)) {
+              $sessionKey = $userField;
+          }
+          unset($_SESSION[$sessionKey]);
+      }
+  }
+
 }

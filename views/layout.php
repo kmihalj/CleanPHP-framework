@@ -74,9 +74,34 @@ use App\Core\I18n;
         <li class="nav-item">
           <a class="nav-link" href="<?= App::url('home'); ?>"><?= _t('Početna') ?></a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link text-warning" href="<?= App::url('logout'); ?>"><?= _t('Odjava') ?></a>
-        </li>
+        <?php if (empty($_SESSION['user_id'])): ?>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown"
+               aria-expanded="false">
+              <?= _t('Prijava/Registracija') ?>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+              <li><a class="dropdown-item" href="<?= App::url('login'); ?>"><?= _t('Prijava') ?></a></li>
+              <li><a class="dropdown-item" href="<?= App::urlFor('register.form'); ?>"><?= _t('Registracija') ?></a></li>
+              <li><a class="dropdown-item" href="<?= App::url('forgot-password'); ?>"><?= _t('Zaboravljena lozinka') ?></a></li>
+            </ul>
+          </li>
+        <?php else: ?>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown"
+               aria-expanded="false">
+              <?= htmlspecialchars($_SESSION['username'] ?? 'Korisnik', ENT_QUOTES, 'UTF-8') ?>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+              <li><a class="dropdown-item" href="<?= App::url('dashboard'); ?>"><?= _t('Dashboard') ?></a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="<?= App::url('user/info'); ?>"><?= _t('Info') ?></a></li>
+              <li><a class="dropdown-item" href="<?= App::urlFor('password.change'); ?>"><?= _t('Promjena lozinke') ?></a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item text-warning" href="<?= App::url('logout'); ?>"><?= _t('Odjava') ?></a></li>
+            </ul>
+          </li>
+        <?php endif; ?>
       </ul>
     </div>
   </div>

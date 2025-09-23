@@ -38,11 +38,13 @@ return function (Router $router) {
   // Javne rute
   // Public routes
 
-  // Namjerno korišten klasični string stil za demonstraciju i stvarnu upotrebu; može izazvati upozorenja u IDE-u.
-  // Intentionally using classic string style for demonstration and real usage; may trigger IDE warnings.
-  $router->get('/', 'AuthController@loginForm')->name('index'); // Klasični string stil rute (može izazvati upozorenja u IDE-u). / Classic string style route (may trigger IDE warnings).
+  // Početna javna ruta sada vodi na HomeController@index kao novu javnu landing stranicu.
+  // The public landing page route now points to HomeController@index as the new public landing page.
+  $router->get('/', [HomeController::class, 'index'])->name('index');
   $router->get('/login', [AuthController::class, 'loginForm'])->name('login.form');
-  $router->get('/register', [AuthController::class, 'loginForm'])->name('register.form');
+  $router->get('/forgot-password', [AuthController::class, 'forgotPasswordForm'])->name('password.forgot.form');
+  $router->post('/forgot-password', [AuthController::class, 'forgotPassword'])->name('password.forgot');
+  $router->get('/register', [AuthController::class, 'registerForm'])->name('register.form');
 
   // Autentikacijske rute
   // Auth routes
@@ -50,9 +52,19 @@ return function (Router $router) {
   $router->post('/register', [AuthController::class, 'register'])->name('register');
   $router->get('/logout', [AuthController::class, 'logout'])->name('logout');
 
-  // Zaštićena početna ruta: middleware 'auth' je registriran u index.php i osigurava pristup samo autentificiranim korisnicima.
-  // Protected home route: middleware 'auth' is registered in index.php and ensures only authenticated users can access it.
+  // Zaštićena ruta za dashboard: middleware 'auth' osigurava pristup samo autentificiranim korisnicima.
+  // Protected dashboard route: 'auth' middleware ensures only authenticated users can access it.
+  $router->get('/dashboard', [HomeController::class, 'dashboard'], ['auth'])->name('dashboard');
+
+
+  // Postojeća zaštićena ruta za početnu stranicu korisnika
+  // Existing protected home route for authenticated users
   $router->get('/home', [HomeController::class, 'index'], ['auth'])->name('home');
+
+  // Zaštićena ruta za prikaz forme za promjenu lozinke (samo za autentificirane korisnike)
+  // Protected route to display the password change form (authenticated users only)
+  $router->get('/change-password', [AuthController::class, 'changePasswordForm'], ['auth'])->name('password.change');
+  $router->post('/change-password', [AuthController::class, 'changePassword'], ['auth'])->name('password.change.post');
 
   // Ruta za promjenu jezika: poziva LocaleController@switch za promjenu trenutnog jezika aplikacije na temelju parametra {locale}.
   // Language switch route: calls LocaleController@switch to change the current application language based on the {locale} parameter.

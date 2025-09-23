@@ -75,4 +75,38 @@ Molimo promijenite lozinku nakon prijave.',
   'Korisnik \\"%s %s\\" će biti obrisan.' => 'Korisnik \\"%s %s\\" će biti obrisan.',
   'Potvrda brisanja' => 'Potvrda brisanja',
   'Korisnik je uspješno obrisan.' => 'Korisnik je uspješno obrisan.',
+  'Korisnik' => 'Korisnik',
+  'Zaboravljena lozinka' => 'Zaboravljena lozinka',
+  'Info' => 'Info',
+  'Promjena lozinke' => 'Promjena lozinke',
+  'Prijava/Registracija' => 'Prijava/Registracija',
+  'Početna stranica' => 'Početna stranica',
+  'Dashboard' => 'Dashboard',
+  'Zaboravio sam lozinku' => 'Zaboravio sam lozinku',
+  'Lozinke se ne podudaraju' => 'Lozinke se ne podudaraju',
+  'Stara lozinka' => 'Stara lozinka',
+  'Nova lozinka' => 'Nova lozinka',
+  'Potvrda nove lozinke' => 'Potvrda nove lozinke',
+  'Promijeni lozinku' => 'Promijeni lozinku',
+  'Nevažeći CSRF token.' => 'Nevažeći CSRF token.',
+  'Naziv rute nije pronađen' => 'Naziv rute nije pronađen',
+  'Došlo je do greške. Provjerite unesene podatke.' => 'Došlo je do greške. Provjerite unesene podatke.',
+  'Stara lozinka nije ispravna.' => 'Stara lozinka nije ispravna.',
+  'Nova lozinka mora imati najmanje %d znakova.' => 'Nova lozinka mora imati najmanje %d znakova.',
+  'Nove lozinke se ne podudaraju.' => 'Nove lozinke se ne podudaraju.',
+  'Lozinka je uspješno promijenjena. Prijavite se s novom lozinkom.' => 'Lozinka je uspješno promijenjena. Prijavite se s novom lozinkom.',
+  'Lozinka uspješno promijenjena, molim prijavite se ponovo.' => 'Lozinka uspješno promijenjena, molim prijavite se ponovo.',
+  'E-mail adresa' => 'E-mail adresa',
+  'Korisnik s tom e-mail adresom ne postoji.' => 'Korisnik s tom e-mail adresom ne postoji.',
+  '<p>Poštovani,</p><p>Za korisničko ime <strong>%s</strong> postavljena je nova lozinka: <strong>%s</strong></p><p>Molimo promijenite lozinku nakon prijave.</p>' => '<p>Poštovani,</p><p>Za korisničko ime <strong>%s</strong> postavljena je nova lozinka: <strong>%s</strong></p><p>Molimo promijenite lozinku nakon prijave.</p>',
+  'Poštovani,
+
+Za korisničko ime %s postavljena je nova lozinka: %s
+
+Molimo promijenite lozinku nakon prijave.' => 'Poštovani,
+
+Za korisničko ime %s postavljena je nova lozinka: %s
+
+Molimo promijenite lozinku nakon prijave.',
+  'Nova lozinka je poslana na unesenu e-mail adresu, provjerite mail i prijavite se.' => 'Nova lozinka je poslana na unesenu e-mail adresu, provjerite mail i prijavite se.',
 );

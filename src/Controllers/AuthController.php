@@ -45,10 +45,25 @@ class AuthController extends Controller
     $this->userModel = new User($pdo);
   }
 
+  /**
+   * Prikazuje formu za registraciju korisnika.
+   * Shows the registration form.
+   */
+  public function registerForm(): void
+  {
+    $errors = flash_get('errors', []);
+    $old    = flash_get('old', []);
+    $this->render('auth/registracija', [
+      'title'  => _t('Registracija'),
+      'errors' => $errors,
+      'old'    => $old,
+    ]);
+  }
+
   public function loginForm(): void
   { // Prikaže login formu ako korisnik nije prijavljen (render view 'auth/login'), inače ga preusmjeri na početnu stranicu. / Shows login form (renders view 'auth/login') if user not logged in, otherwise redirects to home page.
     if (!empty($_SESSION['user_id'])) {
-      $this->redirect(App::url('home'));
+      $this->redirect(App::url('dashboard'));
     }
     $errors = flash_get('errors', []);
     $old = flash_get('old', []);
@@ -67,9 +82,8 @@ class AuthController extends Controller
 
     $user = $this->userModel->findByUsername($username);
     if ($user && password_verify($password, $user['password'])) {
-      $_SESSION['user_id'] = $user['id'];
-      $_SESSION['role'] = $user['role'] ?? 'Registriran';
-      $this->redirect(App::url('home'));
+      $this->userModel->setSessionUserData($user);
+      $this->redirect(App::url('dashboard'));
     }
     $this->render('auth/login', ['title' => _t('Prijava'), 'error' => _t('Neispravno korisničko ime ili lozinka.')]);
   }
@@ -77,7 +91,7 @@ class AuthController extends Controller
   public function register(): void
   { // Validira CSRF, provjerava polja, uspoređuje lozinke; na uspjeh renderira login view s porukom o uspjehu, na grešku renderira register view s porukom o grešci. / Validates CSRF, checks fields, compares passwords; on success renders login view with success message, on error renders register view with error message.
     if (!Csrf::validate($_POST['csrf'] ?? null)) {
-      $this->render('auth/login', ['title' => _t('Registracija'), 'error' => _t('Nevažeći CSRF token.')]);
+      $this->render('auth/registracija', ['title' => _t('Registracija'), 'error' => _t('Nevažeći CSRF token.')]);
       return;
     }
 
@@ -141,11 +155,11 @@ class AuthController extends Controller
     }
 
     if ($data['password'] !== $data['password_confirm']) {
-      $this->render('auth/login', ['title' => _t('Registracija'), 'error' => _t('Lozinke se ne podudaraju.')]);
+      $this->render('auth/registracija', ['title' => _t('Registracija'), 'error' => _t('Lozinke se ne podudaraju.')]);
       return;
     }
     if (!$data['first_name'] || !$data['last_name'] || !$data['username'] || !$data['email'] || !$data['password']) {
-      $this->render('auth/login', ['title' => _t('Registracija'), 'error' => _t('Sva polja su obavezna.')]);
+      $this->render('auth/registracija', ['title' => _t('Registracija'), 'error' => _t('Sva polja su obavezna.')]);
       return;
     }
 
@@ -160,7 +174,7 @@ class AuthController extends Controller
       $this->render('auth/login', ['title' => _t('Prijava'), 'error' => _t('Registracija uspješna. Prijavite se.')]);
       return;
     }
-    $this->render('auth/login', ['title' => _t('Registracija'), 'error' => _t('Greška pri registraciji (korisničko ime ili email već postoji?).')]);
+    $this->render('auth/registracija', ['title' => _t('Registracija'), 'error' => _t('Greška pri registraciji (korisničko ime ili email već postoji?).')]);
   }
 
   public function popis(): void
@@ -206,6 +220,149 @@ class AuthController extends Controller
       'sort' => $sort,
       'perPageOptions' => $perPageOptions
     ]);
+  }
+
+  public function changePasswordForm(): void
+  { // Prikazuje formu za promjenu lozinke / Displays the password change form
+    $errors = flash_get('errors', []);
+    $success = flash_get('success');
+    $this->render('auth/promjenaLozinke', [
+      'title'   => _t('Promjena lozinke'),
+      'errors'  => $errors,
+      'success' => $success,
+    ]);
+  }
+
+  /**
+   * Obrada promjene lozinke korisnika (samo za prijavljenog).
+   * Handles password change for the logged-in user.
+   */
+  public function changePassword(): void
+  {
+    if (!Csrf::validate($_POST['csrf'] ?? null)) {
+      flash_set('errors', ['csrf' => _t('Nevažeći CSRF token.')]);
+      header('Location: ' . App::url('change-password'));
+      exit;
+    }
+
+    // Dohvati trenutno prijavljenog korisnika
+    $userId = $_SESSION['user_id'] ?? null;
+    if (!$userId) {
+      flash_set('errors', ['auth' => _t('Morate biti prijavljeni.')]);
+      header('Location: ' . App::url('login'));
+      exit;
+    }
+
+    $old_password = (string)($_POST['old_password'] ?? '');
+    $new_password = (string)($_POST['new_password'] ?? '');
+    $new_password_confirm = (string)($_POST['new_password_confirm'] ?? '');
+
+    $errors = [];
+
+    // Dohvati korisnika iz baze
+    $user = $this->userModel->find($userId);
+    if (!$user) {
+      $errors['auth'] = _t('Korisnik nije pronađen.');
+    }
+
+    // Provjera stare lozinke
+    if (empty($old_password)) {
+      $errors['old_password'] = _t('Unesite staru lozinku.');
+    } elseif ($user && !password_verify($old_password, $user['password'])) {
+      $errors['old_password'] = _t('Stara lozinka nije ispravna.');
+    }
+
+    // Provjera nove lozinke
+    $minLen = 8;
+    if (empty($new_password)) {
+      $errors['new_password'] = _t('Unesite novu lozinku.');
+    } elseif (strlen($new_password) < $minLen) {
+      $errors['new_password'] = sprintf(_t('Nova lozinka mora imati najmanje %d znakova.'), $minLen);
+    }
+
+    // Provjera potvrde
+    if ($new_password !== $new_password_confirm) {
+      $errors['new_password_confirm'] = _t('Nove lozinke se ne podudaraju.');
+    }
+
+    if (!empty($errors)) {
+      $this->render('auth/promjenaLozinke', [
+        'title' => _t('Promjena lozinke'),
+        'errors' => $errors
+      ]);
+      return;
+    }
+
+    // Sve ok, ažuriraj lozinku
+    $newPasswordHash = password_hash($new_password, PASSWORD_DEFAULT);
+    try {
+      $updated = $this->userModel->updatePassword($userId, $newPasswordHash);
+    } catch (PDOException $e) {
+      error_log(_t('Greška pri promjeni lozinke') . ': ' . $e->getMessage());
+      $updated = false;
+    }
+    if ($updated) {
+      // Očisti podatke iz sesije, ali zadrži flash poruke
+      $this->userModel->clearSessionUserData();
+      Csrf::invalidate();
+      flash_set('success', _t('Lozinka uspješno promijenjena, molim prijavite se ponovo.'));
+      header('Location: ' . App::url('login'));
+    } else {
+      flash_set('errors', ['db' => _t('Greška pri spremanju nove lozinke.')]);
+      header('Location: ' . App::url('change-password'));
+    }
+    exit;
+  }
+
+  /**
+   * Prikazuje formu za zaboravljenu lozinku.
+   * Shows the forgot password form.
+   */
+  public function forgotPasswordForm(): void
+  {
+    $errors = flash_get('errors', []);
+    $this->render('auth/zaboravljenaLozinka', [
+      'title'  => _t('Zaboravljena lozinka'),
+      'errors' => $errors,
+    ]);
+  }
+
+  /**
+   * Obrada zahtjeva za zaboravljenu lozinku.
+   * Handles forgot password POST request.
+   */
+  public function forgotPassword(): void
+  {
+    if (!Csrf::validate($_POST['csrf'] ?? null)) {
+      flash_set('errors', ['csrf' => _t('Nevažeći CSRF token.')]);
+      header('Location: ' . App::url('forgot-password'));
+      exit;
+    }
+
+    $email = trim($_POST['email'] ?? '');
+    if (empty($email)) {
+      flash_set('errors', ['email' => _t('E-mail je obavezan.')]);
+      header('Location: ' . App::url('forgot-password'));
+      exit;
+    }
+
+    $user = $this->userModel->findByEmail($email);
+    if (!$user) {
+      flash_set('errors', ['email' => _t('Korisnik s tom e-mail adresom ne postoji.')]);
+      header('Location: ' . App::url('forgot-password'));
+      exit;
+    }
+
+    // Pozovi postojeću metodu za resetiranje lozinke i slanje e-maila
+    // Ovdje privremeno "fake" $_POST['csrf'] za resetPassword jer očekuje CSRF u POST-u
+    $_POST['csrf'] = $_POST['csrf'] ?? Csrf::token();
+    ob_start();
+    $this->resetPassword((int)$user['id']);
+    ob_end_clean();
+
+    flash_set('success', _t('Nova lozinka je poslana na unesenu e-mail adresu, provjerite mail i prijavite se.'));
+    header('Location: ' . App::url('login'));
+    exit;
   }
 
   public function logout(): void
@@ -325,11 +482,13 @@ class AuthController extends Controller
 
       $subject = _t('Resetiranje lozinke');
       $bodyHtml = sprintf(
-        _t("<p>Poštovani,</p><p>Vaša nova lozinka je: <strong>%s</strong></p><p>Molimo promijenite lozinku nakon prijave.</p>"),
+        _t("<p>Poštovani,</p><p>Za korisničko ime <strong>%s</strong> postavljena je nova lozinka: <strong>%s</strong></p><p>Molimo promijenite lozinku nakon prijave.</p>"),
+        $user['username'],
         $newPassword
       );
       $bodyText = sprintf(
-        _t("Poštovani,\n\nVaša nova lozinka je: %s\n\nMolimo promijenite lozinku nakon prijave."),
+        _t("Poštovani,\n\nZa korisničko ime %s postavljena je nova lozinka: %s\n\nMolimo promijenite lozinku nakon prijave."),
+        $user['username'],
         $newPassword
       );
 
