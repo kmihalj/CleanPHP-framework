@@ -166,6 +166,20 @@ class Router
           if ($ok === false) return;
         }
 
+        // Provjera session zastavice za reset lozinke / Check the password_reset session flag
+        $passwordResetFlag = $_SESSION['password_reset'] ?? 0;
+        if (!empty($_SESSION['user_id']) && (int)$passwordResetFlag === 1) {
+          // Dozvoli samo change-password, logout i promjenu jezika / Allow only change-password, logout, and language switch
+          if (
+            !in_array($path, ['/change-password', '/logout'], true)
+            && !preg_match('#^/lang/[a-z]{2}$#', $path)
+          ) {
+            flash_set('error', _t('Prijavljeni ste s privremenom lozinkom. Molimo promijenite lozinku prije nastavka.'));
+            header('Location: ' . App::url('change-password'));
+            exit;
+          }
+        }
+
         // Pozovi metodu kontrolera s prikupljenim parametrima. / Call the controller method with the collected parameters.
         call_user_func_array([$controller, $methodName], $params);
         return;

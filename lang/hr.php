@@ -109,4 +109,7 @@ Za korisničko ime %s postavljena je nova lozinka: %s
 
 Molimo promijenite lozinku nakon prijave.',
   'Nova lozinka je poslana na unesenu e-mail adresu, provjerite mail i prijavite se.' => 'Nova lozinka je poslana na unesenu e-mail adresu, provjerite mail i prijavite se.',
+  'Morate promijeniti privremenu lozinku prije nastavka.' => 'Morate promijeniti privremenu lozinku prije nastavka.',
+  'Nova lozinka ne smije biti ista kao trenutna privremena lozinka.' => 'Nova lozinka ne smije biti ista kao trenutna privremena lozinka.',
+  'Prijavljeni ste s privremenom lozinkom. Molimo promijenite lozinku prije nastavka.' => 'Prijavljeni ste s privremenom lozinkom. Molimo promijenite lozinku prije nastavka.',
 );

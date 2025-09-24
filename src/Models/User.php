@@ -4,7 +4,7 @@
  *  Hrvatski (Croatian)
  * ===========================
  * Model User predstavlja tablicu `users` u bazi podataka.
- * - Definira polja: id, first_name, last_name, username, email, password, role, created_at.
+ * - Definira polja: id, first_name, last_name, username, email, password, role, created_at, password_reset.
  * - Nasljeđuje BaseModel i koristi PDO konekciju.
  * - Automatski sinkronizira tablicu prilikom inicijalizacije (Migration::sync).
  *
@@ -12,7 +12,7 @@
  *  English
  * ===========================
  * The User model represents the `users` table in the database.
- * - Defines fields: id, first_name, last_name, username, email, password, role, created_at.
+ * - Defines fields: id, first_name, last_name, username, email, password, role, created_at, password_reset.
  * - Inherits from BaseModel and uses PDO connection.
  * - Automatically synchronizes the table on initialization (Migration::sync).
  */
@@ -35,6 +35,7 @@ class User extends BaseModel
     'password' => ['type' => 'VARCHAR(255)'],
     'role' => ['type' => 'VARCHAR(20)', 'default' => 'Registriran'],
     'created_at' => ['type' => 'TIMESTAMP', 'default' => 'CURRENT_TIMESTAMP'],
+    'password_reset' => ['type' => 'TINYINT(1)', 'default' => 0],
   ];
 
   /**
@@ -42,7 +43,7 @@ class User extends BaseModel
    *
    * @var array
    */
-  protected array $sessionFields = ['user_id' => 'id', 'first_name', 'last_name', 'username', 'email', 'role'];
+  protected array $sessionFields = ['user_id' => 'id', 'first_name', 'last_name', 'username', 'email', 'role', 'password_reset'];
 
   /**
    * ===========================
@@ -255,6 +256,28 @@ class User extends BaseModel
       error_log("Greška pri updatePassword za user id=$id: " . implode(' | ', $stmt->errorInfo()));
     }
     return $ok;
+  }
+
+  /**
+   * Postavlja password_reset na 1 za korisnika / Sets password_reset to 1 for the user
+   */
+  public function setPasswordReset(int $id): bool
+  {
+    $sql = "UPDATE {$this->table} SET password_reset = 1 WHERE id = :id";
+    $stmt = $this->pdo->prepare($sql);
+    $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+    return $stmt->execute();
+  }
+
+  /**
+   * Briše flag password_reset (postavlja ga na 0) / Clears the password_reset flag (sets to 0)
+   */
+  public function clearPasswordReset(int $id): bool
+  {
+    $sql = "UPDATE {$this->table} SET password_reset = 0 WHERE id = :id";
+    $stmt = $this->pdo->prepare($sql);
+    $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+    return $stmt->execute();
   }
 
   // Dohvaća korisnika po ID-u. / Retrieves a user by ID.

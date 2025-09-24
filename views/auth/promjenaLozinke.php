@@ -7,6 +7,11 @@ use App\Core\Csrf;
     <div class="row justify-content-center">
         <div class="col-md-6">
             <h1><?= _t('Promjena lozinke') ?></h1>
+            <?php if (!empty($password_reset) && $password_reset == 1): ?>
+                <div class="alert alert-warning">
+                    <?= _t('Prijavljeni ste s privremenom lozinkom. Molimo promijenite lozinku prije nastavka.') ?>
+                </div>
+            <?php endif; ?>
           <?php if (!empty($success)): ?>
                 <div class="alert alert-success">
                     <?= htmlspecialchars($success) ?>

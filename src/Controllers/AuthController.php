@@ -82,6 +82,14 @@ class AuthController extends Controller
 
     $user = $this->userModel->findByUsername($username);
     if ($user && password_verify($password, $user['password'])) {
+      // Provjera je li korisniku postavljeno password_reset (privremena lozinka) / Check if user must change temporary password
+      if (isset($user['password_reset']) && $user['password_reset'] == 1) {
+        $this->userModel->setSessionUserData($user);
+        // Postavi flash poruku password_reset i redirectaj / Set flash message and redirect
+        flash_set('password_reset', 1);
+        header('Location: ' . App::url('change-password'));
+        exit;
+      }
       $this->userModel->setSessionUserData($user);
       $this->redirect(App::url('dashboard'));
     }
@@ -226,10 +234,14 @@ class AuthController extends Controller
   { // Prikazuje formu za promjenu lozinke / Displays the password change form
     $errors = flash_get('errors', []);
     $success = flash_get('success');
+    $error = flash_get('error');
+    $password_reset = flash_get('password_reset', $_SESSION['password_reset'] ?? 0);
     $this->render('auth/promjenaLozinke', [
       'title'   => _t('Promjena lozinke'),
       'errors'  => $errors,
       'success' => $success,
+      'error'   => $error,
+      'password_reset' => $password_reset,
     ]);
   }
 
@@ -245,7 +257,7 @@ class AuthController extends Controller
       exit;
     }
 
-    // Dohvati trenutno prijavljenog korisnika
+    // Dohvati trenutno prijavljenog korisnika / Get currently logged in user
     $userId = $_SESSION['user_id'] ?? null;
     if (!$userId) {
       flash_set('errors', ['auth' => _t('Morate biti prijavljeni.')]);
@@ -259,20 +271,20 @@ class AuthController extends Controller
 
     $errors = [];
 
-    // Dohvati korisnika iz baze
+    // Dohvati korisnika iz baze / Get user from database
     $user = $this->userModel->find($userId);
     if (!$user) {
       $errors['auth'] = _t('Korisnik nije pronađen.');
     }
 
-    // Provjera stare lozinke
+    // Provjera stare lozinke / Check old password
     if (empty($old_password)) {
       $errors['old_password'] = _t('Unesite staru lozinku.');
     } elseif ($user && !password_verify($old_password, $user['password'])) {
       $errors['old_password'] = _t('Stara lozinka nije ispravna.');
     }
 
-    // Provjera nove lozinke
+    // Provjera nove lozinke / Check new password
     $minLen = 8;
     if (empty($new_password)) {
       $errors['new_password'] = _t('Unesite novu lozinku.');
@@ -280,29 +292,41 @@ class AuthController extends Controller
       $errors['new_password'] = sprintf(_t('Nova lozinka mora imati najmanje %d znakova.'), $minLen);
     }
 
-    // Provjera potvrde
+    // Dodatna validacija: nova lozinka ne smije biti identična trenutnoj (privremenoj) / Extra validation: new password must not be identical to current (temporary) password
+    if ($user && password_verify($new_password, $user['password'])) {
+      $errors['new_password'] = _t('Nova lozinka ne smije biti ista kao trenutna privremena lozinka.');
+    }
+
+    // Provjera potvrde / Check confirmation
     if ($new_password !== $new_password_confirm) {
       $errors['new_password_confirm'] = _t('Nove lozinke se ne podudaraju.');
     }
 
     if (!empty($errors)) {
+      $password_reset = flash_get('password_reset', $_SESSION['password_reset'] ?? 0);
       $this->render('auth/promjenaLozinke', [
         'title' => _t('Promjena lozinke'),
-        'errors' => $errors
+        'errors' => $errors,
+        'password_reset' => $password_reset,
       ]);
       return;
     }
 
-    // Sve ok, ažuriraj lozinku
+    // Sve ok, ažuriraj lozinku / All good, update password
     $newPasswordHash = password_hash($new_password, PASSWORD_DEFAULT);
     try {
       $updated = $this->userModel->updatePassword($userId, $newPasswordHash);
+      if ($updated) {
+        // Resetiraj password_reset polje na 0 nakon uspješne promjene lozinke
+        // Reset the password_reset field to 0 after successful password change
+        $this->userModel->clearPasswordReset($userId);
+      }
     } catch (PDOException $e) {
       error_log(_t('Greška pri promjeni lozinke') . ': ' . $e->getMessage());
       $updated = false;
     }
     if ($updated) {
-      // Očisti podatke iz sesije, ali zadrži flash poruke
+      // Očisti podatke iz sesije, ali zadrži flash poruke / Clear session data but keep flash messages
       $this->userModel->clearSessionUserData();
       Csrf::invalidate();
       flash_set('success', _t('Lozinka uspješno promijenjena, molim prijavite se ponovo.'));
@@ -359,6 +383,10 @@ class AuthController extends Controller
     ob_start();
     $this->resetPassword((int)$user['id']);
     ob_end_clean();
+
+    // Nakon resetiranja lozinke postavi password_reset=1 korisniku
+    // After password reset, set password_reset=1 for the user
+    $this->userModel->setPasswordReset((int)$user['id']);
 
     flash_set('success', _t('Nova lozinka je poslana na unesenu e-mail adresu, provjerite mail i prijavite se.'));
     header('Location: ' . App::url('login'));
@@ -476,6 +504,10 @@ class AuthController extends Controller
         echo json_encode(['status' => 'error', 'message' => _t('Nije moguće ažurirati lozinku.')]);
         return;
       }
+
+      // Postavi password_reset na 1 nakon uspješnog resetiranja lozinke
+      // Set password_reset to 1 after successful password reset
+      $this->userModel->setPasswordReset($id);
 
       $config = require __DIR__ . '/../../config/mail.php';
       $mailer = new Mailer($config);
