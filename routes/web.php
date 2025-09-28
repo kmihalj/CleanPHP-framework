@@ -29,54 +29,48 @@
  * The current return function (Router $router) style supports this easily.
  */
 
-use App\Controllers\AuthController;
 use App\Controllers\HomeController;
+use App\Controllers\AuthController;
 use App\Controllers\LocaleController;
+use App\Controllers\TestController;
 use App\Core\Router;
 
 return function (Router $router) {
-  // Javne rute
-  // Public routes
 
-  // Početna javna ruta sada vodi na HomeController@index kao novu javnu landing stranicu.
-  // The public landing page route now points to HomeController@index as the new public landing page.
+  // Početna javna ruta sada vodi na TestController@index kao novu javnu landing stranicu.
+  // The public landing page route now points to TestController@index as the new public landing page.
   $router->get('/', [HomeController::class, 'index'])->name('index');
-  $router->get('/login', [AuthController::class, 'loginForm'])->name('login.form');
-  $router->get('/forgot-password', [AuthController::class, 'forgotPasswordForm'])->name('password.forgot.form');
-  $router->post('/forgot-password', [AuthController::class, 'forgotPassword'])->name('password.forgot');
-  $router->get('/register', [AuthController::class, 'registerForm'])->name('register.form');
 
-  // Autentikacijske rute
-  // Auth routes
-  $router->post('/login', [AuthController::class, 'login'])->name('login');
-  $router->post('/register', [AuthController::class, 'register'])->name('register');
-  $router->get('/logout', [AuthController::class, 'logout'])->name('logout');
+  // Registration form route
+  $router->get('/register', [AuthController::class, 'register'])->name('register.form');
+  $router->post('/register', [AuthController::class, 'registerPOST'])->name('register.submit');
 
-  // Zaštićena ruta za dashboard: middleware 'auth' osigurava pristup samo autentificiranim korisnicima.
-  // Protected dashboard route: 'auth' middleware ensures only authenticated users can access it.
-  $router->get('/dashboard', [HomeController::class, 'dashboard'], ['auth'])->name('dashboard');
+  $router->get('/login', [AuthController::class, 'login'])->name('login.form');
+  $router->post('/login', [AuthController::class, 'loginPOST'])->name('login.submit');
+  $router->post('/logout', [AuthController::class, 'logoutPOST'])->name('logout.submit');
 
+  $router->get('/passwordChange', [AuthController::class, 'promjenaLozinke'], ['auth'])->name('passwordChange.form');
+  $router->post('/passwordChange', [AuthController::class, 'promjenaLozinkePOST'], ['auth'])->name('passwordChange.submit');
 
-  // Postojeća zaštićena ruta za početnu stranicu korisnika
-  // Existing protected home route for authenticated users
-  $router->get('/home', [HomeController::class, 'index'], ['auth'])->name('home');
+  $router->get('/passwordReset', [AuthController::class, 'zaboravljenaLozinka'])->name('passwordReset.form');
+  $router->post('/passwordReset', [AuthController::class, 'zaboravljenaLozinkaPOST'])->name('passwordReset.submit');
 
-  // Zaštićena ruta za prikaz forme za promjenu lozinke (samo za autentificirane korisnike)
-  // Protected route to display the password change form (authenticated users only)
-  $router->get('/change-password', [AuthController::class, 'changePasswordForm'], ['auth'])->name('password.change');
-  $router->post('/change-password', [AuthController::class, 'changePassword'], ['auth'])->name('password.change.post');
+  // Test rute grupirane pod /test
+  // Test routes grouped under /test
+  $router->group('/test', [], function (Router $router) {
+      $router->get('', [TestController::class, 'index'])->name('test.index');
+
+      $router->post('/form-test', [TestController::class, 'formTest'])->name('test.form');
+
+      $router->post('/message-self', [TestController::class, 'messageSelf'])->name('test.message.self');
+      $router->get('/message-self', [TestController::class, 'messageSelf'])->name('test.message.self.get');
+
+      $router->post('/error-self', [TestController::class, 'errorSelf'])->name('test.error.self');
+      $router->get('/error-self', [TestController::class, 'errorSelf'])->name('test.error.self.get');
+  });
 
   // Ruta za promjenu jezika: poziva LocaleController@switch za promjenu trenutnog jezika aplikacije na temelju parametra {locale}.
   // Language switch route: calls LocaleController@switch to change the current application language based on the {locale} parameter.
   $router->get('/lang/{locale}', [LocaleController::class, 'switch'])->name('lang.switch');
-
-  // Grupirane rute za administraciju
-  // Grouped routes for administration
-  $router->group('/admin', ['auth'], function (Router $r) {
-    $r->get('/users', [AuthController::class, 'popis'])->name('admin.users'); // Primjer admin stranice korisnika / Example admin users page
-    $r->post('/users/update/{id}', [AuthController::class, 'update'])->name('admin.users.update');
-    $r->post('/users/reset/{id}', [AuthController::class, 'resetPassword'])->name('admin.users.reset');
-    $r->post('/users/delete/{id}', [AuthController::class, 'delete'])->name('admin.users.delete');
-  });
 
 };

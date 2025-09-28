@@ -27,6 +27,7 @@ use App\Core\I18n;
 <html lang="<?= htmlspecialchars(I18n::getLocale(), ENT_QUOTES, 'UTF-8') ?>">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?= isset($title) ? htmlspecialchars($title) : _t('Aplikacija') ?></title>
   <base href="<?= App::baseHref(); ?>">
   <link href="<?= App::url('css/bootstrap.min.css') ?>?v=<?= filemtime(__DIR__ . '/../public/css/bootstrap.min.css') ?>"
@@ -36,79 +37,29 @@ use App\Core\I18n;
     rel="stylesheet">
   <script
     src="<?= App::url('js/bootstrap.bundle.min.js') ?>?v=<?= filemtime(__DIR__ . '/../public/js/bootstrap.bundle.min.js') ?>"></script>
-  <script src="<?= App::url('js/helpers.js') ?>?v=<?= filemtime(__DIR__ . '/../public/js/helpers.js') ?>"></script>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="<?= App::url(); ?>"><?= _t('CMS Auth Skeleton') ?></a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
-            aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
+<?php include __DIR__ . '/menu.php'; ?>
 
-    <div class="collapse navbar-collapse" id="navbarContent">
-      <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-        <?php if (!empty($_SESSION['user_id']) && ($_SESSION['role'] ?? '') === 'Admin'): ?>
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown"
-               aria-expanded="false">
-              <?= _t('Admin') ?>
-            </a>
-            <ul class="dropdown-menu" aria-labelledby="adminDropdown">
-              <li><a class="dropdown-item" href="<?= App::urlFor('admin.users'); ?>"><?= _t('Popis korisnika') ?></a>
-              </li>
-            </ul>
-          </li>
-        <?php endif; ?>
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" id="langDropdown" role="button" data-bs-toggle="dropdown"
-             aria-expanded="false">
-            <?= _t('Jezik') ?>: <?= strtoupper(I18n::getLocale()) ?>
-          </a>
-          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
-            <li><a class="dropdown-item" href="<?= App::url('lang/hr'); ?>"><?= _t('Hrvatski') ?></a></li>
-            <li><a class="dropdown-item" href="<?= App::url('lang/en'); ?>"><?= _t('English') ?></a></li>
-          </ul>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="<?= App::url('home'); ?>"><?= _t('Početna') ?></a>
-        </li>
-        <?php if (empty($_SESSION['user_id'])): ?>
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown"
-               aria-expanded="false">
-              <?= _t('Prijava/Registracija') ?>
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-              <li><a class="dropdown-item" href="<?= App::url('login'); ?>"><?= _t('Prijava') ?></a></li>
-              <li><a class="dropdown-item" href="<?= App::urlFor('register.form'); ?>"><?= _t('Registracija') ?></a></li>
-              <li><a class="dropdown-item" href="<?= App::url('forgot-password'); ?>"><?= _t('Zaboravljena lozinka') ?></a></li>
-            </ul>
-          </li>
-        <?php else: ?>
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown"
-               aria-expanded="false">
-              <?= htmlspecialchars($_SESSION['username'] ?? 'Korisnik', ENT_QUOTES, 'UTF-8') ?>
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-              <li><a class="dropdown-item" href="<?= App::url('dashboard'); ?>"><?= _t('Dashboard') ?></a></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item" href="<?= App::url('user/info'); ?>"><?= _t('Info') ?></a></li>
-              <li><a class="dropdown-item" href="<?= App::urlFor('password.change'); ?>"><?= _t('Promjena lozinke') ?></a></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item text-warning" href="<?= App::url('logout'); ?>"><?= _t('Odjava') ?></a></li>
-            </ul>
-          </li>
-        <?php endif; ?>
-      </ul>
+<!-- Flash messages -->
+<div class="container-fluid mt-3 px-3">
+  <?php if ($msg = flash_get('success')): ?>
+    <div class="alert alert-success alert-dismissible" role="alert">
+      <?= htmlspecialchars($msg) ?>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
-  </div>
-</nav>
-<main class="container-fluid py-4">
+  <?php endif; ?>
+
+  <?php if ($msg = flash_get('error')): ?>
+    <div class="alert alert-danger alert-dismissible" role="alert">
+      <?= htmlspecialchars($msg) ?>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  <?php endif; ?>
+</div>
+
+<main class="container-fluid px-3">
   <?= $content ?? '' ?>
 </main>
-<div id="flash-messages" class="container mt-2"></div>
 </body>
 </html>

@@ -5,7 +5,6 @@ namespace App\Controllers;
 use App\Core\App;
 use App\Core\Controller;
 use App\Core\I18n;
-use JetBrains\PhpStorm\NoReturn;
 
 /**
  * ===========================================================
@@ -24,7 +23,7 @@ use JetBrains\PhpStorm\NoReturn;
  */
 class LocaleController extends Controller
 {
-  #[NoReturn]
+
   // Postavlja odabrani jezik i preusmjerava korisnika natrag na zadnju sigurnu stranicu. / Sets the selected locale and redirects the user back to the last safe page.
   public function switch(string $locale): void
   {

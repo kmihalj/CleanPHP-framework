@@ -4,60 +4,60 @@ namespace App\Core;
 
 use Random\RandomException;
 
-/**
- * ===========================
- *  Hrvatski (Croatian)
- * ===========================
- * CSRF helper klasa za zaštitu aplikacije od Cross-Site Request Forgery napada.
- * - token: generira i pohranjuje CSRF token u sesiju
- * - input: vraća skriveno polje s CSRF tokenom za HTML forme
- * - validate: provjerava je li poslani token valjan
- * - invalidate: uklanja token iz sesije
- *
- * ===========================
- *  English
- * ===========================
- * CSRF helper class to protect the application from Cross-Site Request Forgery attacks.
- * - token: generates and stores a CSRF token in the session
- * - input: returns a hidden input field with the CSRF token for HTML forms
- * - validate: checks if the submitted token is valid
- * - invalidate: removes the token from the session
- */
 class Csrf
 {
-  const string KEY = '_csrf_token';
-
-  // Generira CSRF token i pohranjuje ga u sesiju (fallback na OpenSSL u slučaju greške). / Generates CSRF token and stores it in session (fallback to OpenSSL if error).
+  /**
+   * Generira i vraća CSRF token, sprema u session ako ga nema.
+   * Generates and returns a CSRF token, stores it in session if not present.
+   *
+   * @return string
+   */
   public static function token(): string
   {
-    if (empty($_SESSION[self::KEY])) {
+    if (!isset($_SESSION['_csrf_token'])) {
       try {
-        $_SESSION[self::KEY] = bin2hex(random_bytes(32));
-      } catch (RandomException $e) {
-        error_log(_t('Greška pri generiranju CSRF tokena') . ': ' . $e->getMessage());
-        $_SESSION[self::KEY] = bin2hex(openssl_random_pseudo_bytes(32));
+        $_SESSION['_csrf_token'] = bin2hex(random_bytes(32));
+      } catch (RandomException) {
+        $_SESSION['_csrf_token'] = bin2hex(openssl_random_pseudo_bytes(32));
       }
     }
-    return $_SESSION[self::KEY];
+    return $_SESSION['_csrf_token'];
   }
 
-  // Vraća <input type="hidden"> s CSRF tokenom za HTML forme. / Returns a <input type="hidden"> with CSRF token for HTML forms.
+  /**
+   * Vraća HTML <input type="hidden"> element sa CSRF tokenom.
+   * Returns an HTML <input type="hidden"> element with the CSRF token.
+   *
+   * @return string
+   */
   public static function input(): string
   {
-    $t = self::token();
-    return '<input type="hidden" name="csrf" value="' . htmlspecialchars($t, ENT_QUOTES, 'UTF-8') . '">';
+    $token = self::token();
+    return '<input type="hidden" name="_csrf_token" value="' . htmlspecialchars($token, ENT_QUOTES, 'UTF-8') . '">';
   }
 
-  // Provjerava je li poslani token isti kao onaj u sesiji. / Validates if submitted token matches the one stored in session.
-  public static function validate(?string $token): bool
+  /**
+   * Provjerava je li token u POST zahtjevu valjan koristeći hash_equals.
+   * Validates if the token in the POST request is valid using hash_equals.
+   *
+   * @return bool
+   */
+  public static function validate(): bool
   {
-    $sess = $_SESSION[self::KEY] ?? '';
-    return is_string($token) && !empty($sess) && hash_equals($sess, $token);
+    if (!isset($_SESSION['_csrf_token']) || !isset($_POST['_csrf_token'])) {
+      return false;
+    }
+    return hash_equals($_SESSION['_csrf_token'], $_POST['_csrf_token']);
   }
 
-  // Uklanja CSRF token iz sesije. / Removes the CSRF token from session.
-  public static function invalidate(): void
+  /**
+   * Briše token iz sessiona.
+   * Removes the token from the session.
+   *
+   * @return void
+   */
+  public static function reset(): void
   {
-    unset($_SESSION[self::KEY]);
+    unset($_SESSION['_csrf_token']);
   }
 }

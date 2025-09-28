@@ -23,21 +23,17 @@
 
 namespace App\Core;
 
-use PDO;
-
 class Router
 {
   private array $routes = ['GET' => [], 'POST' => []];
   // Pamti zadnju dodanu rutu radi točnog imenovanja. / Remember last added route for accurate naming.
   private ?array $lastAdded = null;
-  private PDO $db;
   private string $basePath;
   private array $middlewareRegistry = [];
   private ?array $currentGroup = null;
 
-  public function __construct(PDO $db, string $basePath = '')
+  public function __construct(string $basePath = '')
   {
-    $this->db = $db;
     $this->basePath = rtrim($basePath, '/');
     App::setBasePath($this->basePath);
   }
@@ -57,7 +53,24 @@ class Router
   // Registrira middleware funkciju pod imenom. / Registers a middleware function under a given name.
   public function registerMiddleware(string $name, callable $handler): void
   {
-    $this->middlewareRegistry[$name] = $handler;
+    // Wrap the middleware for 'auth' to support intended_url logic.
+    if ($name === 'auth') {
+      $this->middlewareRegistry[$name] = function ($path, $method) use ($handler) {
+        $result = $handler($path, $method);
+        if ($result === false) {
+          // User is not authenticated. Store intended_url and redirect to login.
+          if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+          }
+          $_SESSION['intended_url'] = $path;
+          header('Location: ' . App::urlFor('login.form'));
+          exit;
+        }
+        return $result;
+      };
+    } else {
+      $this->middlewareRegistry[$name] = $handler;
+    }
   }
 
   // Dodaje rutu u tablicu ruta s patternom i middleware-om. / Adds a route to the routes table with pattern and middleware.
@@ -124,6 +137,35 @@ class Router
       if ($path === '') $path = '/';
     }
 
+    // Nova provjera za korisnike s privremenom lozinkom
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+      session_start();
+    }
+    if (isset($_SESSION['user']['privremenaLozinka'])) {
+      $allowedRoutes = [
+        'passwordChange.form',
+        'passwordChange.submit',
+        'lang.switch',
+        'logout.submit'
+      ];
+      $routeAllowed = false;
+      foreach ($allowedRoutes as $allowedRouteName) {
+        foreach ($this->routes[$method] ?? [] as $route) {
+          if ($route['name'] === $allowedRouteName) {
+            if (preg_match($route['pattern'], $path)) {
+              $routeAllowed = true;
+              break 2;
+            }
+          }
+        }
+      }
+      if (!$routeAllowed) {
+        flash_set('error',_t("Morate promijeniti privremenu lozinku prije nastavka."));
+        header('Location: ' . App::urlFor('passwordChange.form'));
+        exit;
+      }
+    }
+
     // Učitaj sve registrirane rute za zadani HTTP metod (GET/POST). / Load all registered routes for the given HTTP method (GET/POST).
     $routes = $this->routes[$method] ?? [];
 
@@ -148,7 +190,7 @@ class Router
           echo _t("Controller {$controllerClass} nije pronađen.");
           return;
         }
-        $controller = new $controllerClass($this->db);
+        $controller = new $controllerClass();
 
         // Ekstraktiraj parametre iz regex matcha i proslijedi ih metodi kontrolera. / Extract parameters from regex match and pass them to controller method.
         $params = [];
@@ -166,18 +208,10 @@ class Router
           if ($ok === false) return;
         }
 
-        // Provjera session zastavice za reset lozinke / Check the password_reset session flag
-        $passwordResetFlag = $_SESSION['password_reset'] ?? 0;
-        if (!empty($_SESSION['user_id']) && (int)$passwordResetFlag === 1) {
-          // Dozvoli samo change-password, logout i promjenu jezika / Allow only change-password, logout, and language switch
-          if (
-            !in_array($path, ['/change-password', '/logout'], true)
-            && !preg_match('#^/lang/[a-z]{2}$#', $path)
-          ) {
-            flash_set('error', _t('Prijavljeni ste s privremenom lozinkom. Molimo promijenite lozinku prije nastavka.'));
-            header('Location: ' . App::url('change-password'));
-            exit;
-          }
+        if (in_array($method, ['POST', 'PUT', 'DELETE'], true) && !Csrf::validate()) {
+          http_response_code(403);
+          echo _t("CSRF token nije valjan.");
+          return;
         }
 
         // Pozovi metodu kontrolera s prikupljenim parametrima. / Call the controller method with the collected parameters.

@@ -30,11 +30,4 @@ class Controller
     $content = ob_get_clean();
     include __DIR__ . '/../../views/layout.php';
   }
-
-  protected function redirect(string $to): void
-  {
-    // Preusmjeri korisnika na zadani URL i zaustavi izvršavanje. / Redirect the user to the given URL and stop execution.
-    header('Location: ' . $to);
-    exit;
-  }
 }

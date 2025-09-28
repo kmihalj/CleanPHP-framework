@@ -27,44 +27,31 @@ if (!function_exists('_t')) { // Funkcija _t: služi za prevođenje stringova ko
   }
 }
 
-/**
- * ===========================
- *  Hrvatski (Croatian)
- * ===========================
- * Flash helper funkcije omogućuju privremeno spremanje podataka u sesiju
- * (npr. poruke, greške, stare vrijednosti formi).
- * Podaci spremljeni preko flash_set dostupni su samo u sljedećem requestu,
- * nakon čega se automatski brišu kada ih dohvatimo s flash_get.
- *
- * ===========================
- *  English
- * ===========================
- * Flash helper functions provide temporary storage of data in the session
- * (e.g., messages, validation errors, old form values).
- * Data stored with flash_set are available only in the next request,
- * after which they are automatically removed when retrieved with flash_get.
- */
-
 if (!function_exists('flash_set')) {
-  function flash_set(string $key, mixed $value): void
+  // Postavlja flash poruku (string ili polje) u sesiju. / Sets a flash message (string or array) in the session.
+  // Sada podržava i string i array vrijednosti. / Now supports both string and array values.
+  function flash_set(string $key, string|array $message): void
   {
-    if (!isset($_SESSION['_flash'])) {
-      $_SESSION['_flash'] = [];
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+      session_start();
     }
-    $_SESSION['_flash'][$key] = $value;
+    $_SESSION['flash'][$key] = $message;
   }
 }
 
 if (!function_exists('flash_get')) {
-  function flash_get(string $key, mixed $default = null): mixed
+  // Dohvaća i uklanja flash poruku (string ili polje) iz sesije. / Gets and removes a flash message (string or array) from the session.
+  // Sada može vratiti string, array ili null. / Now may return string, array, or null.
+  function flash_get(string $key): string|array|null
   {
-    $val = $_SESSION['_flash'][$key] ?? $default;
-    if (isset($_SESSION['_flash'][$key])) {
-      unset($_SESSION['_flash'][$key]);
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+      session_start();
     }
-    if (isset($_SESSION['_flash']) && count($_SESSION['_flash']) === 0) {
-      unset($_SESSION['_flash']);
+    if (isset($_SESSION['flash'][$key])) {
+      $msg = $_SESSION['flash'][$key];
+      unset($_SESSION['flash'][$key]);
+      return $msg;
     }
-    return $val;
+    return null;
   }
 }

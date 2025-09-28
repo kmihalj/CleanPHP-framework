@@ -7,76 +7,61 @@
 
 ### Hrvatski
 
-
 Cilj je imati čist i proširiv kostur bez ikakvih ovisnosti, samo čisti PHP i HTML/CSS.
 
-Ovaj primjer je PHP MVC skeleton s ugrađenim auth modulom, server-side sort/paginacijom, inline uređivanjem (AJAX),
-resetom lozinke (PHPMailer), brisanje s modalom (POST + redirect), i18n, CSRF zaštitom te automatskim migracijama na
-temelju definicija u modelima (schema).
+Ovaj primjer je PHP MVC skeleton s ugrađenim auth modulom, resetom lozinke (PHPMailer), i18n, CSRF zaštitom te automatskim migracijama na temelju definicija u modelima (schema).
 
 Autentikacija uključuje registraciju, prijavu, odjavu, promjenu lozinke, zaboravljenu lozinku (reset putem e-maila), hash lozinke i session-based auth.
-
-Javaskript je korišten
-samo na primjeru za model Users u svrhu inline uređivanja u tabeli, nije potrebno koristiti JavaScript ukoliko to ne
-želite, framework se može koristiti i samo sa čistim PHP+HTML tehnologijama.
-PHPMailer je dodan za slanje mailova korisnicima prilikom reseta lozinke, također nije nužan i ako ga ne trebate možete ga izbaciti.
-Da bi vidjeli Admin stranice u ovom primjeru potrebno je korisniku u bazi staviti rolu Admin, onda taj korisnik može iz sučelja
-drugim korisnicima dodjeljivati sve potrebne role.
 
 ### English
 
 The goal is to provide a clean and extensible skeleton without any dependencies, using only pure PHP and HTML/CSS.
 
-This example is a PHP MVC skeleton with a built-in authentication module, server-side sorting/pagination, inline editing (AJAX), password reset (PHPMailer), deletion with a modal (POST + redirect), i18n, CSRF protection, and automatic migrations based on model (schema) definitions.
+This example is a PHP MVC skeleton with a built-in authentication module, password reset (PHPMailer), i18n, CSRF protection, and automatic migrations based on model (schema) definitions.
 
 Authentication includes registration, login, logout, password change, forgotten password (reset via email), password hashing, and session-based authentication.
 
-JavaScript is used only in the Users model example for inline table editing. You don’t need to use JavaScript if you don’t want to — the framework can be used purely with PHP+HTML technologies.
-PHPMailer is included for sending emails during password reset, but it is optional — if you don’t need it, you can remove it.
-To view the Admin pages in this example, you must assign the Admin role to a user in the database. That user can then assign roles to other users via the interface.
 ## Ključne značajke / Key Features
 
 ### Hrvatski
 
-- Čisti MVC (bez velikih frameworka korištenjem samo PHP-a, a u primjeru je i JavaScript radi AJAX-a)
+- Čisti MVC (bez velikih frameworka korištenjem samo PHP-a)
 - Automatske migracije: modeli deklarativno definiraju schema() → skeleton kreira/usklađuje tablice
 - Autentikacija: registracija, prijava, odjava, promjena lozinke, zaboravljena lozinka (reset putem e-maila), hash lozinke, session-based auth
 - Middleware: npr. auth za zaštitu privatnih ruta; role-based zaštita (Admin) u view-u i/ili middleware-u
 - Ruter: GET/POST, parametri u putanji, imenovane rute (name()), grupe (npr. /admin), urlFor() helper
 - CSRF zaštita (hidden token u formama, validacija u kontroleru)
-- Validacija i flash poruke (server-side) + showMessage() (client-side)
-- i18n: helper _t('string'), runtime „žetva“ ključnih stringova u primarnom jeziku; lang/hr.php, lang/en.php
+- Validacija i flash poruke (server-side)
+- i18n: helper _t('string'), primarni jezik definiran u config/app.php; runtime „žetva“ ključnih stringova; lang/hr.php, lang/en.php
 - UI: Bootstrap 5 (lokalno), Bootstrap Icons ili emoji ikone
-- Popis korisnika: server-side sort + paginacija, inline uređivanje preko AJAX-a, reset lozinke (modal + e-mail),
-  brisanje (modal + POST + redirect) uz očuvanje sort/dir/page/per_page i fallback na prethodnu stranicu
+- Svi modeli preko BaseModel imaju uuid kao primarni ključ i polje created_at; svi modeli nasljeđuju globalne metode create, update, findByField, existsByField, countAll
 
 ### English
 
-- Clean MVC (no large frameworks, using only PHP; JavaScript included in the example for AJAX)
+- Clean MVC (no large frameworks, using only PHP)
 - Automatic migrations: models declaratively define schema(); the skeleton creates/updates tables accordingly
 - Authentication: registration, login, logout, password change, forgotten password (reset via email), password hashing, session-based authentication
 - Middleware: e.g., auth for protecting private routes; role-based protection (Admin) in the view and/or middleware
 - Router: GET/POST, path parameters, named routes (name()), groups (e.g. /admin), urlFor() helper
 - CSRF protection (hidden token in forms, validation in controller)
-- Validation and flash messages (server-side) + showMessage() (client-side)
-- i18n: _t('string') helper, runtime "harvesting" of key strings in the primary language; lang/hr.php, lang/en.php
-- UI: Bootstrap 5 (local), Bootstrap Icons or emoji icons
-- User listing: server-side sort + pagination, inline editing via AJAX, password reset (modal + email),
-  deletion (modal + POST + redirect) with preservation of sort/dir/page/per_page and fallback to the previous page
+- Validation and flash messages (server-side)
+- i18n: _t('string') helper, primary language set in config/app.php; runtime harvesting of key strings; lang/hr.php, lang/en.php
+- UI: Bootstrap 5 (local files), Bootstrap Icons or emoji icons
+- All models via BaseModel have uuid as primary key and created_at field; all models inherit global methods create, update, findByField, existsByField, countAll
 
 ## Tehnologije / Technologies
 
 ### Hrvatski
 
 - PHP 8.1+
-- PDO (MySQL 8) — utf8mb4 i utf8mb4_croatian_ci po defaultu (podesivo)
+- PDO (MySQL 8) — collation/charset se konfigurira u config/database.php
 - Bootstrap 5 (lokalne datoteke), Bootstrap Icons (po želji)
 - PHPMailer (preko Composera) za SMTP mail
 
 ### English
 
 - PHP 8.1+
-- PDO (MySQL 8) — utf8mb4 and utf8mb4_croatian_ci by default (configurable)
+- PDO (MySQL 8) — collation/charset is configured in config/database.php
 - Bootstrap 5 (local files), Bootstrap Icons (optional)
 - PHPMailer (via Composer) for SMTP email
 
@@ -89,14 +74,14 @@ To view the Admin pages in this example, you must assign the Admin role to a use
 │  ├─ .htaccess
 │  ├─ index.php
 │  ├─ css/ bootstrap.min.css, bootstrap-icons.css, …
-│  └─ js/  helpers.js, popis.js, …
+│  └─ js/  helpers.js, …
 ├─ src/
 │  ├─ Core/               # App, Router, Controller, Csrf, I18n, Mailer, …
 │  ├─ Controllers/        # AuthController, HomeController, LocaleController, …
 │  └─ Models/             # User.php (schema, save, update, find, count, …)
 ├─ views/
 │  ├─ layout.php
-│  ├─ auth/ login.php, popis.php, promjenaLozinke.php, registracija.php, zaboravljenaLozinka.php
+│  ├─ auth/ login.php, promjenaLozinke.php, registracija.php, zaboravljenaLozinka.php
 │  └─ home/ index.php
 ├─ routes/
 │  └─ web.php             # Definicije ruta (imenovane, grupe, middleware)
@@ -118,14 +103,14 @@ To view the Admin pages in this example, you must assign the Admin role to a use
 │  ├─ .htaccess
 │  ├─ index.php
 │  ├─ css/ bootstrap.min.css, bootstrap-icons.css, …
-│  └─ js/  helpers.js, popis.js, …
+│  └─ js/  helpers.js, …
 ├─ src/
 │  ├─ Core/               # App, Router, Controller, Csrf, I18n, Mailer, …
 │  ├─ Controllers/        # AuthController, HomeController, LocaleController, …
 │  └─ Models/             # User.php (schema, save, update, find, count, …)
 ├─ views/
 │  ├─ layout.php
-│  ├─ auth/ login.php, popis.php, promjenaLozinke.php, registracija.php, zaboravljenaLozinka.php
+│  ├─ auth/ login.php, passwordChange.php, registration.php, forgottenPassword.php
 │  └─ home/ index.php
 ├─ routes/
 │  └─ web.php             # Route definitions (named, groups, middleware)
@@ -140,13 +125,13 @@ To view the Admin pages in this example, you must assign the Admin role to a use
 └─ README.md
 ```
 
-## Zahtjevi
+## Zahtjevi / Requirements
 
 ### Hrvatski
 
 - PHP ≥ 8.1 (PDO, mbstring)
 - MySQL 8
-- Composer (ako koristiš PHPMailer)
+- Composer (za PHPMailer)
 - Apache/Nginx (preporučeno) ili PHP built-in server za lokalni test
 
 1. Klonirajte repozitorij:
@@ -163,7 +148,7 @@ To view the Admin pages in this example, you must assign the Admin role to a use
 
 - PHP ≥ 8.1 (PDO, mbstring)
 - MySQL 8
-- Composer (if you use PHPMailer)
+- Composer (for PHPMailer)
 - Apache/Nginx (recommended) or PHP built-in server for local testing
 
 1. Clone the repository:
@@ -173,41 +158,6 @@ To view the Admin pages in this example, you must assign the Admin role to a use
 3. Configure the application using the files in the `/config` directory (`app.php`, `database.php`, `mail.php`). Copy the corresponding `.example.php` files (e.g., `app.example.php` to `app.php`) and adjust them to your database and email server settings.
 4. Database tables will be automatically created on the first run based on the defined models.
 5. Start a local server or deploy to a production server.
-
-## Rute / Routes
-
-### Hrvatski
-
-Rute su u routes/web.php
-
-### English
-
-Routes are defined in routes/web.php
-
-## Modeli i automatske migracije
-
-### Hrvatski
-
-Model definiraj u src/Models/, npr. User.php.
-Schema opisuje tablicu; skeleton pri startu:
-
-1. kreira tablicu ako ne postoji
-2. dodaje nedostajuće kolone
-3. (opcionalno) dodaje indekse/unique
-
-Napomena: trenutni migrator pokriva CREATE i ADD COLUMN. RENAME/MODIFY kolona nisu automatizirani (moguće dodati
-verzionirani migrator kasnije).
-
-### English
-
-Define your model in src/Models/, e.g., User.php.
-The schema describes the table; on startup, the skeleton:
-
-1. creates the table if it does not exist
-2. adds missing columns
-3. (optionally) adds indexes/unique constraints
-
-Note: the current migrator covers CREATE and ADD COLUMN. RENAME/MODIFY columns are not automated (a versioned migrator may be added later).
 
 ## Autentikacija i sigurnost / Authentication and security
 
@@ -230,7 +180,8 @@ Note: the current migrator covers CREATE and ADD COLUMN. RENAME/MODIFY columns a
 ### Hrvatski
 
 - Svi ispisi idu preko _t('String')
-- Primarni jezik (lang/hr.php) se automatski puni novim stringovima kad se pojave na ekranu
+- Primarni jezik definiran je u config/app.php
+- Primarni jezik se automatski puni novim stringovima kad se pojave na ekranu
 - Prijevodi se ručno održavaju u lang/en.php (ili drugim jezicima)
 - Promjena jezika: /lang/{locale} (npr. hr, en)
 - Dropdown u layoutu za brzi odabir
@@ -238,70 +189,29 @@ Note: the current migrator covers CREATE and ADD COLUMN. RENAME/MODIFY columns a
 ### English
 
 - All output is handled via _t('String')
-- The primary language file (lang/hr.php) is automatically populated with new strings as they appear on screen
+- Primary language is defined in config/app.php
+- The primary language file is automatically populated with new strings as they appear on screen
 - Translations are maintained manually in lang/en.php (or other languages)
 - Change language: /lang/{locale} (e.g., hr, en)
 - Dropdown in the layout for quick selection
 
-## UI i UX
+## UI i UX / UI and UX
 
 ### Hrvatski
 
 - Bootstrap 5 i Bootstrap Icons lokalno (bez CDN)
-- Popis korisnika:
-  - Sort i paginacija: server-side (GET parametri)
-  - Inline edit: dvoklik na polje ili ✏️ → input/select → AJAX spremanje
-  - Reset lozinke: 🔑 → modal → AJAX → mail korisniku (HTML + plain text)
-  - Brisanje: 🗑️ → modal → POST + redirect (očuvanje sort/dir/page/per_page; fallback na prethodnu stranicu ako je
-    zadnja ostala prazna)
 - Obrasci uključuju odvojeni login i registraciju, promjenu lozinke, zaboravljenu lozinku
 
 ### English
 
 - Bootstrap 5 and Bootstrap Icons locally (no CDN)
-- User list:
-  - Sorting and pagination: server-side (GET parameters)
-  - Inline edit: double-click on a field or ✏️ → input/select → AJAX save
-  - Password reset: 🔑 → modal → AJAX → email to user (HTML + plain text)
-  - Deletion: 🗑️ → modal → POST + redirect (preserves sort/dir/page/per_page; fallback to previous page if the last one is empty)
 - Forms include separate login and registration, password change, forgotten password
-
-## E-mail (PHPMailer)
-
-### Hrvatski
-
-- Konfiguracija u config/mail.php
-- Mailer wrapper klasa: slanje HTML i/ili plain text poruka
-- Reset i zaboravljena lozinka šalju novu lozinku korisniku e-mailom
-
-### English
-
-- Configuration in config/mail.php
-- Mailer wrapper class: send HTML and/or plain text messages
-- Password reset and forgotten password send a new password to the user via email
-
-## Razvojne napomene / Development notes
-
-### Hrvatski
-
-- PSR-4 autoload (composer.json: "App\\": "src/")
-- Kôd i komentari su dvojezični (HR/EN) zbog lakšeg onboardinga i dokumentiranja
-- Inline JSDoc u popis.js za bolju IDE podršku (Modal/Alert tipovi, itd.)
-- Helperi: App::url(), App::urlFor(), _t(), flash_set()/flash_get(), Csrf::input()/validate()
-
-### English
-
-- PSR-4 autoload (composer.json: "App\\": "src/")
-- Code and comments are bilingual (HR/EN) for easier onboarding and documentation
-- Inline JSDoc in popis.js for better IDE support (Modal/Alert types, etc.)
-- Helpers: App::url(), App::urlFor(), _t(), flash_set()/flash_get(), Csrf::input()/validate()
 
 ## TODO / Roadmap
 
 ### Hrvatski
 
 - Route caching, fallback auto-routing
-- Napredniji validacijski sloj i form error handling helperi
 - Globalni XSS mitigations (CSP, X-Content-Type-Options, itd.)
 - Verzionirane migracije (migrations/ direktorij)
 - Jedinični testovi (PHPUnit)
@@ -309,7 +219,6 @@ Note: the current migrator covers CREATE and ADD COLUMN. RENAME/MODIFY columns a
 ### English
 
 - Route caching, fallback auto-routing
-- More advanced validation layer and form error handling helpers
 - Global XSS mitigations (CSP, X-Content-Type-Options, etc.)
 - Versioned migrations (migrations/ directory)
 - Unit tests (PHPUnit)

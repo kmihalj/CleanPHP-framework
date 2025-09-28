@@ -3,10 +3,12 @@
     "description": "PHP MVC auth skeleton with PDO, dynamic base, CSRF, middleware, auto-migration, HR collation, and literal-string i18n (_t).",
     "type": "project",
     "require": {
-        "php": ">=8.1",
+      "php": ">=8.4",
       "ext-pdo": "*",
       "ext-openssl": "*",
-      "phpmailer/phpmailer": "^6.9"
+      "phpmailer/phpmailer": "^6.9",
+      "ext-mbstring": "*",
+      "ext-ctype": "*"
     },
     "autoload": {
         "psr-4": {
