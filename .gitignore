@@ -19,3 +19,11 @@ Thumbs.db
 config/app.php
 config/database.php
 config/mail.php
+
+# bootstrap
+public/css/fonts/
+public/css/bootstrap.min.css
+public/css/bootstrap-icons.css
+public/css/bootstrap.min.css.map
+public/js/bootstrap.bundle.min.js
+public/js/bootstrap.bundle.min.js.map
