@@ -141,8 +141,9 @@ Authentication includes registration, login, logout, password change, forgotten 
 3. Konfigurirajte aplikaciju pomoću datoteka u direktoriju `/config` (`app.php`, `database.php`, `mail.php`). Kopirajte
    odgovarajuće `.example.php` datoteke (npr. `app.example.php` u `app.php`) i prilagodite ih svojim postavkama baze i
    e-mail servera.
-4. Tablice baze podataka će biti automatski kreirane na prvom pokretanju aplikacije na temelju definiranih modela.
-5. Pokrenite lokalni server ili postavite na produkcijski server.
+4. Podesite views/layout.php za CDN Boostrap 5 ili instalirajte lokalne bootstrap biblioteke u public/css i public/js
+5. Tablice baze podataka će biti automatski kreirane na prvom pokretanju aplikacije na temelju definiranih modela.
+6. Pokrenite lokalni server ili postavite na produkcijski server.
 
 ### English
 
@@ -156,8 +157,9 @@ Authentication includes registration, login, logout, password change, forgotten 
 2. Install Composer packages:
    `composer install`
 3. Configure the application using the files in the `/config` directory (`app.php`, `database.php`, `mail.php`). Copy the corresponding `.example.php` files (e.g., `app.example.php` to `app.php`) and adjust them to your database and email server settings.
-4. Database tables will be automatically created on the first run based on the defined models.
-5. Start a local server or deploy to a production server.
+4. Configure views/layout.php to use the Bootstrap 5 CDN, or install the local Bootstrap libraries in public/css and public/js.
+5. Database tables will be automatically created on the first run based on the defined models.
+6. Start a local server or deploy to a production server.
 
 ## Autentikacija i sigurnost / Authentication and security
 
