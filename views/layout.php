@@ -1,36 +1,43 @@
 <?php
 /**
- * ===========================
+ * ===========================================================
  *  Hrvatski (Croatian)
- * ===========================
+ * ===========================================================
  * Glavni layout view aplikacije.
- * - Sadrži osnovnu HTML strukturu (head, body).
- * - Učitava Bootstrap CSS i JS iz lokalnih datoteka.
- * - Prikazuje navigacijsku traku s linkovima na početnu, odjavu i izbor jezika.
- * - Unutar <main> elementa se ubacuje sadržaj ($content) koji dolazi iz kontrolera.
+ * - Definira osnovnu HTML strukturu (head, body).
+ * - Učitava Bootstrap CSS i JS (lokalno ili preko CDN-a).
+ * - Prikazuje glavnu navigaciju i flash poruke.
+ * - U <main> element ubacuje sadržaj ($content) koji dolazi iz kontrolera.
  *
- * ===========================
+ * ===========================================================
  *  English
- * ===========================
+ * ===========================================================
  * Main layout view of the application.
- * - Contains the basic HTML structure (head, body).
- * - Loads Bootstrap CSS and JS from local files.
- * - Displays a navigation bar with links to home, logout, and language selection.
- * - Inside the <main> element, the controller-provided content ($content) is injected.
+ * - Defines the basic HTML structure (head, body).
+ * - Loads Bootstrap CSS and JS (locally or via CDN).
+ * - Displays the main navigation and flash messages.
+ * - Inserts controller-provided content ($content) into the <main> element.
  */
 
+// HR: Uvoz potrebnih klasa za aplikaciju i internacionalizaciju
+// EN: Import required classes for the application and internationalization
 use App\Core\App;
 use App\Core\I18n;
 
 ?>
-<!-- Local version -->
+<!-- HR: Početak HTML dokumenta s definiranim jezikom prema odabranom locale-u -->
+<!-- EN: Start of HTML document with language set according to selected locale -->
 <!DOCTYPE html>
 <html lang="<?= htmlspecialchars(I18n::getLocale(), ENT_QUOTES, 'UTF-8') ?>">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- HR: Naslov stranice - koristi varijablu $title ili zadanu vrijednost -->
+  <!-- EN: Page title - uses $title variable or default value -->
   <title><?= isset($title) ? htmlspecialchars($title) : _t('Aplikacija') ?></title>
   <base href="<?= App::baseHref(); ?>">
+  <!-- HR: Učitavanje Bootstrap CSS i ikona iz lokalnih datoteka -->
+  <!-- EN: Loading Bootstrap CSS and icons from local files -->
   <link href="<?= App::url('css/bootstrap.min.css') ?>?v=<?= filemtime(__DIR__ . '/../public/css/bootstrap.min.css') ?>"
         rel="stylesheet">
   <link
@@ -40,7 +47,8 @@ use App\Core\I18n;
     src="<?= App::url('js/bootstrap.bundle.min.js') ?>?v=<?= filemtime(__DIR__ . '/../public/js/bootstrap.bundle.min.js') ?>"></script>
 </head>
 
-<!-- CDN Version -->
+<!-- HR: Alternativna verzija - učitavanje Bootstrap CSS/JS i ikona preko CDN-a -->
+<!-- EN: Alternative version - loading Bootstrap CSS/JS and icons via CDN -->
 <!--
 <head>
   <meta charset="UTF-8">
@@ -64,9 +72,14 @@ use App\Core\I18n;
 
 
 <body>
+<?php
+// HR: Uključi datoteku s glavnim izbornikom
+// EN: Include the main menu file
+?>
 <?php include __DIR__ . '/menu.php'; ?>
 
-<!-- Flash messages -->
+<!-- HR: Blok za prikaz flash poruka (uspjeh i greška) -->
+<!-- EN: Block for displaying flash messages (success and error) -->
 <div class="container-fluid mt-3 px-3">
   <?php if ($msg = flash_get('success')): ?>
     <div class="alert alert-success alert-dismissible" role="alert">
@@ -83,6 +96,8 @@ use App\Core\I18n;
   <?php endif; ?>
 </div>
 
+<!-- HR: Glavni sadržaj stranice - dinamički umetnut iz kontrolera -->
+<!-- EN: Main page content - dynamically injected from the controller -->
 <main class="container-fluid px-3">
   <?= $content ?? '' ?>
 </main>

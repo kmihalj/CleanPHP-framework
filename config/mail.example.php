@@ -1,41 +1,25 @@
 <?php
 /**
- * ===========================
+ * ===========================================================
  *  Hrvatski (Croatian)
- * ===========================
- * Konfiguracija za SMTP mail.
- * Ovaj fajl treba kopirati kao mail.php i popuniti stvarnim SMTP podacima
- * da bi aplikacija ispravno radila.
- * Ovdje definiramo postavke za slanje emailova pomoću PHPMailer-a.
- * - smtp_host: adresa SMTP poslužitelja
- * - smtp_port: port (587 za TLS, 465 za SSL)
- * - smtp_user: korisničko ime za autentikaciju
- * - smtp_pass: lozinka za autentikaciju
- * - smtp_secure: 'tls' ili 'ssl' ovisno o poslužitelju
- * - from_email: email adresa koja se prikazuje kao pošiljatelj
- * - from_name: ime pošiljatelja koje se prikazuje primatelju
+ * ===========================================================
+ * Primjer konfiguracije za SMTP mail pomoću PHPMailer-a.
+ * Ovu datoteku treba kopirati kao 'mail.php' i popuniti stvarnim SMTP podacima
+ * kako bi aplikacija mogla ispravno slati email poruke.
  *
- * ===========================
+ * ===========================================================
  *  English
- * ===========================
- * SMTP mail configuration.
- * This file should be copied as mail.php and filled with real SMTP credentials
- * for the application to work properly.
- * Here we define settings for sending emails using PHPMailer.
- * - smtp_host: SMTP server address
- * - smtp_port: port (587 for TLS, 465 for SSL)
- * - smtp_user: username for authentication
- * - smtp_pass: password for authentication
- * - smtp_secure: 'tls' or 'ssl' depending on server
- * - from_email: email address shown as sender
- * - from_name: sender name shown to recipient
+ * ===========================================================
+ * Example configuration for SMTP mail using PHPMailer.
+ * This file should be copied as 'mail.php' and filled with real SMTP credentials
+ * for the application to be able to send emails properly.
  */
 return [
-  'smtp_host' => 'your.smtp.host',
-  'smtp_port' => 587,
-  'smtp_user' => 'your-username',
-  'smtp_pass' => 'your-password',
-  'smtp_secure' => 'tls',
-  'from_email' => 'noreply@example.com',
-  'from_name' => 'Your Application',
+  'smtp_host' => 'your.smtp.host', // HR: Adresa SMTP poslužitelja / EN: SMTP server address
+  'smtp_port' => 587, // HR: Port (587 za TLS, 465 za SSL) / EN: Port (587 for TLS, 465 for SSL)
+  'smtp_user' => 'your-username', // HR: Korisničko ime za autentikaciju / EN: Username for authentication
+  'smtp_pass' => 'your-password', // HR: Lozinka za autentikaciju / EN: Password for authentication
+  'smtp_secure' => 'tls', // HR: 'tls' ili 'ssl' ovisno o poslužitelju / EN: 'tls' or 'ssl' depending on server
+  'from_email' => 'noreply@example.com', // HR: Email adresa pošiljatelja / EN: Sender email address
+  'from_name' => 'Your Application', // HR: Ime pošiljatelja prikazano primatelju / EN: Sender name shown to recipient
 ];

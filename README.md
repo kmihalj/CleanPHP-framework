@@ -169,6 +169,7 @@ Authentication includes registration, login, logout, password change, forgotten 
 - CSRF zaštita: Csrf::input() u formi + Csrf::validate() u kontroleru
 - Validacija na modelu (npr. unique, required, duljina)
 - XSS: u view-ovima se koristi htmlspecialchars(); dodatno se može uvesti CSP header
+- Preusmjeravanje nakon prijave: Router pamti `intended_url` (izvorno traženi URL) i `intended_middleware` (npr. auth, admin). Nakon uspješne prijave AuthController vraća korisnika na tu stranicu ako ima odgovarajuća prava. Ako nema, korisnik se preusmjerava na početnu stranicu uz prikaz poruke o nedostatku ovlasti.
 
 ### English
 
@@ -176,6 +177,7 @@ Authentication includes registration, login, logout, password change, forgotten 
 - CSRF protection: Csrf::input() in the form + Csrf::validate() in the controller
 - Model validation (e.g., unique, required, length)
 - XSS: htmlspecialchars() is used in views; additional CSP headers can be introduced
+- Post-login redirection: The Router stores `intended_url` (originally requested URL) and `intended_middleware` (e.g., auth, admin). After successful login, the AuthController redirects the user back to that page if they have the proper permissions. If not, the user is redirected to the homepage with an error message indicating insufficient privileges.
 
 ## Internacionalizacija / Internationalization
 

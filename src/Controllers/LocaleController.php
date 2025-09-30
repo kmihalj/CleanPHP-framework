@@ -11,41 +11,46 @@ use App\Core\I18n;
  *  Hrvatski (Croatian)
  * ===========================================================
  * Kontroler za promjenu jezika aplikacije.
- * - Metoda switch postavlja novi jezik.
- * - Nakon promjene jezika vraća korisnika na prethodnu sigurnu stranicu.
  *
  * ===========================================================
  *  English
  * ===========================================================
  * Controller for changing the application language.
- * - The switch method sets the new locale.
- * - After changing the locale, it redirects the user back to the last safe page.
  */
 class LocaleController extends Controller
 {
 
-  // Postavlja odabrani jezik i preusmjerava korisnika natrag na zadnju sigurnu stranicu. / Sets the selected locale and redirects the user back to the last safe page.
+  /**
+   * HR: Postavlja odabrani jezik i preusmjerava korisnika natrag na zadnju sigurnu stranicu.
+   * EN: Sets the selected locale and redirects the user back to the last safe page.
+   *
+   * @param string $locale HR: Odabrani jezik (npr. 'hr', 'en') / EN: Selected locale (e.g. 'hr', 'en')
+   * @return void
+   */
   public function switch(string $locale): void
   {
     I18n::setLocale($locale);
+    // HR: Postavi novi jezik / EN: Set the new locale
 
-    // Uzmi zadnji GET URL iz sesije ili početnu stranicu / Take last GET URL from session or fallback to homepage
     $back = $_SESSION['last_get'] ?? App::url();
-    // Ako postoji HTTP referer i nije lang ruta, koristi njega / If HTTP referer exists and is not a lang route, use it
+    // HR: Uzmi zadnji GET URL iz sesije ili početnu stranicu / EN: Get last GET URL from session or homepage as fallback
+
     if (!empty($_SERVER['HTTP_REFERER'])) {
       $refPath = parse_url($_SERVER['HTTP_REFERER'], PHP_URL_PATH) ?? '';
       if (!preg_match('#/lang/[^/]+$#', $refPath)) {
         $back = $_SERVER['HTTP_REFERER'];
       }
     }
-    // Ako je i dalje lang ruta, koristi početnu stranicu / If still a lang route, fallback to homepage
+    // HR: Ako postoji HTTP referer i nije lang ruta, koristi njega / EN: If HTTP referer exists and is not a lang route, use it
+
     $backPath = parse_url($back, PHP_URL_PATH) ?? '';
     if (preg_match('#/lang/[^/]+$#', $backPath)) {
       $back = App::url();
     }
+    // HR: Ako je URL još uvijek lang ruta, koristi početnu stranicu / EN: If still a lang route, fallback to homepage
 
-    // Preusmjeri korisnika na određeni URL / Redirect the user to the chosen URL
     header('Location: ' . $back);
     exit;
+    // HR: Preusmjeri korisnika na određeni URL / EN: Redirect the user to the chosen URL
   }
 }

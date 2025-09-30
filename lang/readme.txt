@@ -1,6 +1,6 @@
-*******************************************************
-*************** Hrvatska verzija ***************
-*******************************************************
+ * ===========================================================
+ *  Hrvatski (Croatian)
+ * ===========================================================
 
 Ovaj CMS koristi jednostavan sustav za višejezičnost.
 
@@ -11,9 +11,9 @@ Ovaj CMS koristi jednostavan sustav za višejezičnost.
 - Svi stringovi na zadanom jeziku automatski se dodaju u prijevodnu datoteku prvi put kada se pojave.
 - Da bi string bio relevantan za višejezičnost, MORA biti ispisan pomoću pomoćne funkcije `_t('tekst')`.
 
-*******************************************************
-*************** English version ***************
-*******************************************************
+ * ===========================================================
+ *  English
+ * ===========================================================
 
 This CMS uses a simple translation system for multilingual support.
 

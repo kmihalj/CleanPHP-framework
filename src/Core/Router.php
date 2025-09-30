@@ -1,27 +1,23 @@
 <?php
 /**
- * ===========================
+ * ===========================================================
  *  Hrvatski (Croatian)
- * ===========================
+ * ===========================================================
  * Router klasa upravlja rutiranjem HTTP zahtjeva.
- * - get/post: registriraju GET i POST rute.
- * - addRoute: dodaje rutu s pripadajućim patternom i middleware-om.
- * - compilePathToRegex: pretvara putanju s parametrima (npr. /user/{id}) u regex i popis parametara.
- * - dispatch: pronalazi odgovarajuću rutu, izvršava middleware i poziva odgovarajući kontroler i metodu.
- * - registerMiddleware: omogućava registraciju middleware funkcija (npr. 'auth').
+ * Omogućuje registraciju ruta, dodjelu middleware-a,
+ * i izvršavanje odgovarajućih kontrolera.
  *
- * ===========================
+ * ===========================================================
  *  English
- * ===========================
+ * ===========================================================
  * The Router class manages routing of HTTP requests.
- * - get/post: register GET and POST routes.
- * - addRoute: adds a route with its pattern and middleware.
- * - compilePathToRegex: converts a path with parameters (e.g. /user/{id}) into regex and list of parameters.
- * - dispatch: finds a matching route, executes middleware, and calls the appropriate controller and method.
- * - registerMiddleware: allows registration of middleware functions (e.g. 'auth').
+ * Allows registering routes, assigning middleware,
+ * and executing the appropriate controllers.
  */
 
 namespace App\Core;
+
+use RuntimeException;
 
 class Router
 {
@@ -32,28 +28,59 @@ class Router
   private array $middlewareRegistry = [];
   private ?array $currentGroup = null;
 
+  /**
+   * HR: Konstruktor - postavlja basePath i sprema ga u App.
+   * EN: Constructor - sets basePath and stores it in App.
+   *
+   * @param string $basePath HR: Osnovni put aplikacije / EN: Application base path
+   * @return void
+   */
   public function __construct(string $basePath = '')
   {
     $this->basePath = rtrim($basePath, '/');
     App::setBasePath($this->basePath);
   }
 
-  // Registrira GET rutu. / Registers a GET route.
+  /**
+   * HR: Registrira GET rutu.
+   * EN: Registers a GET route.
+   *
+   * @param string $path HR: Putanja rute / EN: Route path
+   * @param string|array $action HR: Akcija (Controller@method ili [Controller::class, 'method']) / EN: Action (Controller@method or [Controller::class, 'method'])
+   * @param array $middleware HR: Middleware koji se primjenjuje na rutu / EN: Middleware applied to the route
+   * @return self
+   */
   public function get(string $path, string|array $action, array $middleware = []): self
   {
     return $this->addRoute('GET', $path, $action, $middleware);
   }
 
-  // Registrira POST rutu. / Registers a POST route.
+  /**
+   * HR: Registrira POST rutu.
+   * EN: Registers a POST route.
+   *
+   * @param string $path HR: Putanja rute / EN: Route path
+   * @param string|array $action HR: Akcija (Controller@method ili [Controller::class, 'method']) / EN: Action (Controller@method or [Controller::class, 'method'])
+   * @param array $middleware HR: Middleware koji se primjenjuje na rutu / EN: Middleware applied to the route
+   * @return self
+   */
   public function post(string $path, string|array $action, array $middleware = []): self
   {
     return $this->addRoute('POST', $path, $action, $middleware);
   }
 
-  // Registrira middleware funkciju pod imenom. / Registers a middleware function under a given name.
+  /**
+   * HR: Registrira middleware pod zadanim imenom.
+   * EN: Registers a middleware under a given name.
+   *
+   * @param string $name HR: Naziv middleware-a / EN: Middleware name
+   * @param callable $handler HR: Funkcija koja implementira middleware / EN: Function that implements middleware
+   * @return void
+   */
   public function registerMiddleware(string $name, callable $handler): void
   {
-    // Wrap the middleware for 'auth' to support intended_url logic.
+    // HR: Wrap za 'auth' middleware - sprema intended_url i preusmjerava na login
+    // EN: Wrap for 'auth' middleware - stores intended_url and redirects to login
     if ($name === 'auth') {
       $this->middlewareRegistry[$name] = function ($path, $method) use ($handler) {
         $result = $handler($path, $method);
@@ -62,8 +89,35 @@ class Router
           if (session_status() !== PHP_SESSION_ACTIVE) {
             session_start();
           }
-          $_SESSION['intended_url'] = $path;
+          $_SESSION['intended_url'] = $_SERVER['REQUEST_URI'] ?? App::url();
+          $_SESSION['intended_middleware'] = 'auth';
           header('Location: ' . App::urlFor('login.form'));
+          exit;
+        }
+        return $result;
+      };
+      // HR: Wrap za 'admin' middleware - sprema intended_url ili preusmjerava s greškom
+      // EN: Wrap for 'admin' middleware - stores intended_url or redirects with error
+    } elseif ($name === 'admin') {
+      $this->middlewareRegistry[$name] = function ($path, $method) use ($handler) {
+        $result = $handler($path, $method);
+        if ($result === false) {
+          // User is not authenticated. Store intended_url and redirect to login.
+          if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+          }
+          $_SESSION['intended_url'] = $_SERVER['REQUEST_URI'] ?? App::url();
+          $_SESSION['intended_middleware'] = 'admin';
+          header('Location: ' . App::urlFor('login.form'));
+          exit;
+        } elseif ($result === 'not_admin') {
+          // User is authenticated but not admin. Do not override intended_url.
+          if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+          }
+          unset($_SESSION['intended_url'], $_SESSION['intended_middleware']); // clear any stored redirect
+          flash_set('error', _t("Nemate dozvolu za pristup željenoj stranici."));
+          header('Location: ' . App::urlFor('index'));
           exit;
         }
         return $result;
@@ -73,7 +127,8 @@ class Router
     }
   }
 
-  // Dodaje rutu u tablicu ruta s patternom i middleware-om. / Adds a route to the routes table with pattern and middleware.
+  // HR: Dodaje rutu u tablicu ruta s patternom i middleware-om
+  // EN: Adds a route to the routes table with pattern and middleware
   private function addRoute(string $method, string $path, string|array $action, array $middleware): self
   {
     // Ako postoji grupa, dodaj prefix i middleware. / If a group is active, add its prefix and middleware.
@@ -97,7 +152,13 @@ class Router
     return $this;
   }
 
-  // Dodjeljuje ime zadnjoj registriranoj ruti. / Assigns a name to the last registered route.
+  /**
+   * HR: Dodjeljuje ime zadnjoj registriranoj ruti.
+   * EN: Assigns a name to the last registered route.
+   *
+   * @param string $name HR: Naziv rute / EN: Route name
+   * @return void
+   */
   public function name(string $name): void
   {
     // Dodjeljuje ime upravo zadnje registriranoj ruti. / Assigns a name to the most recently registered route.
@@ -112,7 +173,8 @@ class Router
     $this->routes[$m][$i]['name'] = $name;
   }
 
-  // Pretvara path s {parametrima} u regex i vraća popis parametara. / Converts a path with {parameters} into regex and returns parameter list.
+  // HR: Pretvara path s {parametrima} u regex i vraća popis parametara
+  // EN: Converts path with {parameters} into regex and returns parameter list
   private function compilePathToRegex(string $path): array
   {
     $paramNames = [];
@@ -124,20 +186,27 @@ class Router
     return ['regex' => $regex, 'params' => $paramNames];
   }
 
-  // Pronalaženje odgovarajuće rute, izvršavanje middleware-a i kontrolera, te prosljeđivanje parametara.
-  // Match the requested route, execute middleware and controller, and pass parameters.
+  /**
+   * HR: Pronalazi odgovarajuću rutu, izvršava middleware i kontroler.
+   * EN: Finds a matching route, executes middleware and controller.
+   *
+   * @param string $uri HR: URI zahtjeva / EN: Request URI
+   * @param string $method HR: HTTP metoda (GET, POST, ...) / EN: HTTP method (GET, POST, ...)
+   * @return void
+   * @throws RuntimeException HR: Ako kontroler nije pronađen ili CSRF token nije valjan / EN: If controller not found or CSRF token invalid
+   */
   public function dispatch(string $uri, string $method): void
   {
-    // Dohvati putanju iz URI-ja. / Extract the path from the URI.
+    // HR: Dohvati path iz URI-ja / EN: Extract path from URI
     $path = parse_url($uri, PHP_URL_PATH) ?? '/';
 
-    // Ako aplikacija radi u poddirektoriju, ukloni basePath iz putanje. / If app runs in subdirectory, strip basePath from path.
+    // HR: Ako app radi u poddirektoriju, ukloni basePath / EN: If app runs in subdirectory, strip basePath
     if ($this->basePath !== '' && str_starts_with($path, $this->basePath)) {
       $path = substr($path, strlen($this->basePath)) ?: '/';
       if ($path === '') $path = '/';
     }
 
-    // Nova provjera za korisnike s privremenom lozinkom
+    // HR: Provjera privremene lozinke i dozvoljenih ruta / EN: Check for temporary password and allowed routes
     if (session_status() !== PHP_SESSION_ACTIVE) {
       session_start();
     }
@@ -166,15 +235,13 @@ class Router
       }
     }
 
-    // Učitaj sve registrirane rute za zadani HTTP metod (GET/POST). / Load all registered routes for the given HTTP method (GET/POST).
+    // HR: Iteracija kroz rute i match po regexu / EN: Iterate through routes and match by regex
     $routes = $this->routes[$method] ?? [];
 
     foreach ($routes as $route) {
-      // Provjeri poklapa li se trenutna putanja s regex patternom rute. / Check if current path matches the route's regex pattern.
       if (preg_match($route['pattern'], $path, $matches)) {
 
-        // Odredi kontroler i metodu: podržava array [Controller::class, method] ili string "Controller@method".
-        // Resolve controller and method: supports array [Controller::class, method] or string "Controller@method".
+        // HR: Resolve kontroler i metodu / EN: Resolve controller and method
         if (is_array($route['action'])) {
           // [Controller::class, 'method']
           [$controllerClass, $methodName] = $route['action'];
@@ -184,7 +251,6 @@ class Router
           $controllerClass = 'App\\Controllers\\' . $controllerName;
         }
 
-        // Ako kontroler ne postoji, vrati 500 error. / If controller class does not exist, return 500 error.
         if (!class_exists($controllerClass)) {
           http_response_code(500);
           echo _t("Controller {$controllerClass} nije pronađen.");
@@ -192,7 +258,7 @@ class Router
         }
         $controller = new $controllerClass();
 
-        // Ekstraktiraj parametre iz regex matcha i proslijedi ih metodi kontrolera. / Extract parameters from regex match and pass them to controller method.
+        // HR: Ekstraktiraj parametre i proslijedi metodi / EN: Extract parameters and pass to method
         $params = [];
         foreach ($route['params'] as $p) {
           if (isset($matches[$p])) {
@@ -200,21 +266,21 @@ class Router
           }
         }
 
-        // Pokreni sve middleware-e definirane za ovu rutu. Ako bilo koji vrati false, prekini obradu.
-        // Run all middleware attached to this route. If any returns false, stop execution.
+        // HR: Pokreni middleware za rutu / EN: Run middleware for the route
         foreach ($route['middleware'] as $mwName) {
           if (!isset($this->middlewareRegistry[$mwName])) continue;
           $ok = call_user_func($this->middlewareRegistry[$mwName], $path, $method);
           if ($ok === false) return;
         }
 
+        // HR: CSRF provjera za POST/PUT/DELETE / EN: CSRF validation for POST/PUT/DELETE
         if (in_array($method, ['POST', 'PUT', 'DELETE'], true) && !Csrf::validate()) {
           http_response_code(403);
           echo _t("CSRF token nije valjan.");
           return;
         }
 
-        // Pozovi metodu kontrolera s prikupljenim parametrima. / Call the controller method with the collected parameters.
+        // HR: Pozovi kontroler metodu s parametrima / EN: Call controller method with parameters
         call_user_func_array([$controller, $methodName], $params);
         return;
       }
@@ -224,24 +290,25 @@ class Router
     echo _t("404 - Ruta nije pronađena.");
   }
 
-  // Vraća sve registrirane rute. / Returns all registered routes.
+  /**
+   * HR: Vraća sve registrirane rute.
+   * EN: Returns all registered routes.
+   *
+   * @return array HR: Polje svih ruta / EN: Array of all routes
+   */
   public function getRoutes(): array
   {
     return $this->routes;
   }
 
   /**
-   * ===========================
-   *  Hrvatski (Croatian)
-   * ===========================
-   * Definira grupu ruta sa zajedničkim prefixom i middleware-om.
-   * Sve rute unutar callback funkcije dobit će prefix i middleware grupe.
+   * HR: Definira grupu ruta sa zajedničkim prefixom i middleware-om.
+   * EN: Defines a group of routes with a common prefix and middleware.
    *
-   * ===========================
-   *  English
-   * ===========================
-   * Defines a group of routes with a common prefix and middleware.
-   * All routes inside the callback will inherit the group's prefix and middleware.
+   * @param string $prefix HR: Prefix putanje za grupu ruta / EN: Path prefix for the route group
+   * @param array $middleware HR: Middleware primijenjen na grupu / EN: Middleware applied to the group
+   * @param callable $callback HR: Callback funkcija za definiranje ruta / EN: Callback function to define routes
+   * @return void
    */
   public function group(string $prefix, array $middleware, callable $callback): void
   {

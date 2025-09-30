@@ -1,5 +1,21 @@
 <?php
 
+/**
+ * ===========================================================
+ *  Hrvatski (Croatian)
+ * ===========================================================
+ * Kontroler za autentikaciju korisnika.
+ * Omogućuje registraciju, prijavu, odjavu, resetiranje lozinke,
+ * promjenu lozinke i validaciju OIB-a.
+ *
+ * ===========================================================
+ *  English
+ * ===========================================================
+ * User authentication controller.
+ * Provides registration, login, logout, password reset,
+ * password change and OIB validation.
+ */
+
 namespace App\Controllers;
 
 use App\Core\App;
@@ -12,10 +28,16 @@ use PDO;
 use PHPMailer\PHPMailer\Exception;
 use RuntimeException;
 
-
 class AuthController extends Controller
 {
 
+  /**
+   * HR: Konstruktor inicijalizira modele Role i Korisnik s PDO konekcijom.
+   * EN: Constructor initializes Role and Korisnik models with PDO connection.
+   *
+   * @return void
+   * @throws RuntimeException HR: Ako DB konfiguracija ne vraća PDO instancu. / EN: If DB config does not return a PDO instance.
+   */
   private Role $role;
   private Korisnik $korisnik;
 
@@ -34,19 +56,28 @@ class AuthController extends Controller
     $this->korisnik = new Korisnik($pdo);
   }
 
+  /**
+   * HR: Prikazuje formu za registraciju korisnika.
+   * EN: Renders the registration form.
+   *
+   * @return void
+   */
   public function register(): void
   { // Renderira javnu početnu stranicu s naslovom. / Renders the public home page with a title.
     $this->render('korisnik/registracija', ['title' => _t('Registracija korisnika')]);
   }
 
   /**
-   * Obrada forme za registraciju korisnika.
+   * HR: Obrada registracijskih podataka i kreiranje novog korisnika.
+   * EN: Handles registration data and creates a new user.
+   *
+   * @return void
    */
   public function registerPOST(): void
   {
     $errors = [];
 
-    // Dohvati podatke iz $_POST
+    // HR: Dohvati podatke iz POST zahtjeva / EN: Get data from POST request
     $ime = trim($_POST['ime'] ?? '');
     $prezime = trim($_POST['prezime'] ?? '');
     $korisnicko_ime = trim($_POST['korisnicko_ime'] ?? '');
@@ -55,7 +86,7 @@ class AuthController extends Controller
     $lozinka = $_POST['lozinka'] ?? '';
     $potvrda_lozinke = $_POST['potvrda_lozinke'] ?? '';
 
-    // Validacija lozinke
+    // HR: Validacija lozinke / EN: Password validation
     if ($lozinka && strlen($lozinka) < 8) {
       $errors['lozinka'] = _t('Lozinka mora imati barem 8 znakova.');
     }
@@ -64,12 +95,12 @@ class AuthController extends Controller
       $errors['lozinka'] = _t('Lozinke se ne podudaraju.');
     }
 
-    // Validacija OIB-a
+    // HR: Validacija OIB-a / EN: OIB validation
     if ($oib && !self::check($oib)) {
       $errors['oib'] = _t('OIB nije valjan.');
     }
 
-    // Provjera jedinstvenosti korisničkog imena, OIB-a i emaila
+    // HR: Provjera jedinstvenosti korisničkog imena, OIB-a i emaila / EN: Check uniqueness of username, OIB and email
     if ($korisnicko_ime && $this->korisnik->existsByField('korisnicko_ime', $korisnicko_ime)) {
       $errors['korisnicko_ime'] = _t('Korisničko ime je već zauzeto.');
     }
@@ -80,6 +111,7 @@ class AuthController extends Controller
       $errors['email'] = _t('E-mail je već registriran.');
     }
 
+    // HR: Ako postoje greške, spremi ih u flash i preusmjeri natrag / EN: If errors exist, save to flash and redirect back
     if (!empty($errors)) {
       flash_set('error', _t('Korisnik nije kreiran, provjerite podatke.'));
       flash_set('errors', $errors);
@@ -94,13 +126,13 @@ class AuthController extends Controller
       exit;
     }
 
-    // Odredi rolu: prvi korisnik postaje Admin, ostali Registriran
+    // HR: Odredi rolu prvog korisnika (Admin) ili kasnije (Registriran) / EN: Determine role (first user = Admin, others = Registered)
     $brojKorisnika = $this->korisnik->countAll();
     $rola = ($brojKorisnika === 0) ? 'Admin' : 'Registriran';
     $role = $this->role->findByField('name', $rola);
     $role_uuid = $role['uuid'] ?? null;
 
-    // Spremi korisnika u bazu (lozinka će biti hashirana u modelu)
+    // HR: Spremi korisnika u bazu (lozinka će biti hashirana u modelu) / EN: Save user to DB (password hashed in model)
     $this->korisnik->create([
       'ime' => $ime,
       'prezime' => $prezime,
@@ -116,13 +148,26 @@ class AuthController extends Controller
     exit;
   }
 
+  /**
+   * HR: Prikazuje formu za login korisnika.
+   * EN: Renders the login form.
+   *
+   * @return void
+   */
   public function login(): void
   {
     $this->render('korisnik/prijava', ['title' => _t('Prijava korisnika')]);
   }
 
+  /**
+   * HR: Obrada prijave korisnika.
+   * EN: Handles user login.
+   *
+   * @return void
+   */
   public function loginPOST(): void
   {
+    // HR: Pokreni sesiju ako nije aktivna / EN: Start session if not active
     if (session_status() === PHP_SESSION_NONE) {
       session_start();
     }
@@ -130,15 +175,18 @@ class AuthController extends Controller
     $korisnicko_ime = trim($_POST['korisnicko_ime'] ?? '');
     $lozinka = $_POST['lozinka'] ?? '';
 
+    // HR: Dohvati korisnika iz baze / EN: Fetch user from DB
     $korisnik = $this->korisnik->findByField('korisnicko_ime', $korisnicko_ime);
     $hash = (string)($korisnik['lozinka'] ?? '');
 
+    // HR: Provjeri lozinku / EN: Verify password
     if (!$korisnik || !password_verify($lozinka, $hash)) {
       flash_set('error', _t('Prijava nije uspjela, provjerite korisničko ime i lozinku'));
       header('Location: ' . App::urlFor('login.form'));
       exit;
     }
 
+    // HR: Spremi korisničke podatke u sesiju / EN: Save user data to session
     $_SESSION['user'] = [
       'uuid' => $korisnik['uuid'],
       'ime' => $korisnik['ime'],
@@ -152,6 +200,7 @@ class AuthController extends Controller
       $_SESSION['user']['privremenaLozinka'] = true;
     }
 
+    // HR: Ako je privremena lozinka, preusmjeri na promjenu lozinke / EN: If temporary password, redirect to password change
     if (!empty($_SESSION['user']['privremenaLozinka'])) {
       // redirect na promjenu lozinke
       flash_set('success', _t('Uspješno ste prijavljeni privremenom lozinkom. Promijenite lozinku.'));
@@ -160,9 +209,17 @@ class AuthController extends Controller
     }
 
     flash_set('success', _t('Uspješno ste prijavljeni.'));
+
+    // HR: Ako postoji intended_url, preusmjeri tamo (uz provjeru prava) / EN: If intended_url exists, redirect there (with role check)
     if (isset($_SESSION['intended_url'])) {
-      $redirectUrl = App::url($_SESSION['intended_url']);
-      unset($_SESSION['intended_url']);
+      $redirectUrl = $_SESSION['intended_url'];
+      $intendedMiddleware = $_SESSION['intended_middleware'] ?? null;
+      unset($_SESSION['intended_url'], $_SESSION['intended_middleware']);
+
+      if ($intendedMiddleware === 'admin' && ($_SESSION['user']['role_name'] ?? '') !== 'Admin') {
+        flash_set('error', _t('Nemate dozvolu za pristup željenoj stranici.'));
+        $redirectUrl = App::urlFor('index');
+      }
     } else {
       $redirectUrl = App::urlFor('index');
     }
@@ -171,7 +228,10 @@ class AuthController extends Controller
   }
 
   /**
-   * Odjava korisnika - uništava sesiju, CSRF i preusmjerava na naslovnicu.
+   * HR: Odjava korisnika, uništava sesiju i CSRF token.
+   * EN: Logs out user, destroys session and CSRF token.
+   *
+   * @return void
    */
   public function logoutPOST(): void
   {
@@ -186,20 +246,30 @@ class AuthController extends Controller
     exit;
   }
 
+  /**
+   * HR: Prikazuje formu za zaboravljenu lozinku.
+   * EN: Renders the forgot password form.
+   *
+   * @return void
+   */
   public function zaboravljenaLozinka(): void
   {
     $this->render('korisnik/zaboravljenaLozinka', ['title' => _t('Zaboravljena lozinka')]);
   }
 
   /**
-   * Obrada zahtjeva za reset lozinke.
-   * Korisnik unosi korisničko ime ili e-mail adresu.
+   * HR: Obrada zahtjeva za reset lozinke.
+   * EN: Handles password reset request.
+   *
+   * @return void
+   * @throws RuntimeException HR: Ako generiranje privremene lozinke ne uspije. / EN: If generating temporary password fails.
+   * @throws Exception HR: Ako slanje e-maila ne uspije. / EN: If sending email fails.
    */
   public function zaboravljenaLozinkaPOST(): void
   {
     $unos = trim($_POST['korisnik'] ?? '');
 
-    // Pokušaj pronaći korisnika po emailu ili korisničkom imenu
+    // HR: Pokušaj pronaći korisnika po emailu ili korisničkom imenu / EN: Try to find user by email or username
     $korisnik = null;
     $resetPoEmailu = false;
     if ($this->korisnik->existsByField('email', $unos)) {
@@ -209,6 +279,7 @@ class AuthController extends Controller
       $korisnik = $this->korisnik->findByField('korisnicko_ime', $unos);
     }
 
+    // HR: Ako korisnik ne postoji, flash error i redirect / EN: If user does not exist, flash error and redirect
     if (!$korisnik) {
       flash_set('error', _t('Korisnik sa unesenim podacima nije registriran.'));
       header('Location: ' . App::urlFor('passwordReset.form'));
@@ -216,7 +287,7 @@ class AuthController extends Controller
     }
 
     try {
-      // Generiraj novu privremenu lozinku i spremi ju u bazu
+      // HR: Generiraj novu privremenu lozinku i spremi / EN: Generate and save new temporary password
       $novaLozinka = $this->korisnik->setTemporaryPassword($korisnik['uuid']);
     } catch (RuntimeException $e) {
       flash_set('error', $e->getMessage());
@@ -226,6 +297,7 @@ class AuthController extends Controller
 
     $config = require __DIR__ . '/../../config/mail.php';
     try {
+      // HR: Slanje emaila s privremenom lozinkom / EN: Send email with temporary password
       $mailer = new Mailer($config);
       $to = $korisnik['email'];
       $subject = _t('Resetiranje lozinke');
@@ -253,13 +325,26 @@ class AuthController extends Controller
     exit;
   }
 
+  /**
+   * HR: Prikazuje formu za promjenu lozinke.
+   * EN: Renders the password change form.
+   *
+   * @return void
+   */
   public function promjenaLozinke(): void
   {
     $this->render('korisnik/promjenaLozinke', ['title' => _t('Promjena lozinke')]);
   }
 
+  /**
+   * HR: Obrada promjene lozinke.
+   * EN: Handles password change.
+   *
+   * @return void
+   */
   public function promjenaLozinkePOST(): void
   {
+    // HR: Pokreni sesiju ako nije aktivna / EN: Start session if not active
     if (session_status() === PHP_SESSION_NONE) {
       session_start();
     }
@@ -275,6 +360,7 @@ class AuthController extends Controller
 
     $hash_stara = (string)($korisnik['lozinka'] ?? '');
 
+    // HR: Validacija stare i nove lozinke / EN: Validate old and new password
     if (!password_verify($stara_lozinka, $hash_stara)) {
       $errors['lozinka'] = _t('Stara lozinka nije ispravna.');
     }
@@ -291,6 +377,7 @@ class AuthController extends Controller
       $errors['lozinka'] = _t('Nova lozinka ne smije biti ista kao stara.');
     }
 
+    // HR: Ako postoje greške, flash error i redirect / EN: If errors, flash error and redirect
     if (!empty($errors)) {
       flash_set('error', _t('Lozinka nije promijenjena, provjerite podatke.'));
       flash_set('errors', $errors);
@@ -298,12 +385,14 @@ class AuthController extends Controller
       exit;
     }
 
+    // HR: Spremi novu lozinku i ukloni privremenu oznaku / EN: Save new password and clear temporary flag
     $nova_lozinka_hash = password_hash($nova_lozinka, PASSWORD_DEFAULT);
     $this->korisnik->update($uuid, [
       'lozinka' => $nova_lozinka_hash,
       'privremenaLozinka' => 0,
     ]);
 
+    // HR: Uništi sesiju i zatraži ponovni login / EN: Destroy session and require re-login
     if (session_status() === PHP_SESSION_NONE) {
       session_start();
     }
@@ -316,9 +405,11 @@ class AuthController extends Controller
   }
 
   /**
-   * Validacija OIB-a (https://markoivancic.from.hr/provjera-ispravnosti-oiba-u-php-u).
-   * @param string $oib
-   * @return bool
+   * HR: Validacija OIB-a (Osobni identifikacijski broj).
+   * EN: Validates OIB (Croatian personal identification number).
+   *
+   * @param string $oib HR: OIB za validaciju / EN: OIB to validate
+   * @return bool HR: True ako je OIB valjan, inače false / EN: True if OIB is valid, otherwise false
    */
   public static function check(string $oib): bool
   {

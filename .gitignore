@@ -27,3 +27,6 @@ public/css/bootstrap-icons.css
 public/css/bootstrap.min.css.map
 public/js/bootstrap.bundle.min.js
 public/js/bootstrap.bundle.min.js.map
+
+# jezici
+lang/en.php

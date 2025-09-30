@@ -4,7 +4,7 @@ declare(strict_types=1);
  * ===========================================================
  *  Hrvatski (Croatian)
  * ===========================================================
- * Ovo je glavni ulaz u aplikaciju (front controller).
+ * Glavni ulaz u aplikaciju (front controller).
  * Pokreće sesiju i učitava Composer autoloader.
  * Učitava konfiguraciju iz `config/`.
  * Automatski detektira `basePath` (korisno za deploy u poddirektorij).
@@ -16,7 +16,7 @@ declare(strict_types=1);
  * ===========================================================
  *  English
  * ===========================================================
- * This is the main entry point of the application (front controller).
+ * Main entry point of the application (front controller).
  * Starts the session and loads the Composer autoloader.
  * Loads configuration from `config/`.
  * Automatically detects the `basePath` (useful for subdirectory deployment).
@@ -25,24 +25,22 @@ declare(strict_types=1);
  * Loads routes from `routes/web.php`.
  * Finally calls dispatch to handle the request.
  */
-// Pokretanje sesije i učitavanje Composer autoloadera.
-// Start session and load Composer autoloader.
+// HR: Pokretanje sesije i učitavanje Composer autoloadera / EN: Start session and load Composer autoloader
 session_start();
 require __DIR__ . '/../vendor/autoload.php';
+header("Content-Security-Policy: default-src 'self'; style-src 'self' https://cdn.jsdelivr.net; script-src 'self' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; object-src 'none'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; require-trusted-types-for 'script'");
 
-// Učitaj globalne helpere / Load global helpers
+// HR: Učitaj globalne helpere / EN: Load global helpers
 require_once __DIR__ . '/../src/helpers.php';
 
 use App\Core\Router;
 use App\Core\I18n;
 use App\Core\App;
 
-// Učitavanje konfiguracije aplikacije.
-// Load application configuration.
+// HR: Učitavanje konfiguracije aplikacije / EN: Load application configuration
 $config = require __DIR__ . '/../config/app.php';
 
-// Automatski otkrivanje basePath-a (korisno kada je aplikacija u poddirektoriju).
-// Automatically detect basePath (useful when app is in a subdirectory).
+// HR: Automatsko otkrivanje basePath-a (korisno kada je aplikacija u poddirektoriju) / EN: Automatically detect basePath (useful when app is in a subdirectory)
 $scriptName = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
 $dir1 = rtrim(dirname($scriptName), '/'); // e.g. /cms/public or /cms
 if (str_ends_with($dir1, '/public')) {
@@ -51,15 +49,13 @@ if (str_ends_with($dir1, '/public')) {
   $basePath = ($dir1 === '/' ? '' : $dir1);          // -> '' (root) or /cms
 }
 
-// Inicijalizacija internacionalizacije s default i podržanim jezicima iz app.php.
-// Initialize internationalization with default and supported locales from app.php.
+// HR: Inicijalizacija internacionalizacije s default i podržanim jezicima iz app.php / EN: Initialize internationalization with default and supported locales from app.php
 I18n::init($config['default_locale'] ?? 'hr', $config['supported_locales'] ?? ['hr', 'en']);
 
-// Pokretanje routera s basePath-om.
-// Initialize router with basePath.
+// HR: Pokretanje routera s basePath-om / EN: Initialize router with basePath
 $router = new Router($basePath);
 
-// Register 'auth' middleware
+// HR: Registracija 'auth' middleware-a / EN: Register 'auth' middleware
 $router->registerMiddleware('auth', function () {
     if (session_status() === PHP_SESSION_NONE) {
         session_start();
@@ -72,11 +68,28 @@ $router->registerMiddleware('auth', function () {
     return true;
 });
 
-// Učitaj sve rute iz datoteke routes/web.php.
-// Load all routes from routes/web.php file.
+// HR: Registracija 'admin' middleware-a / EN: Register 'admin' middleware
+$router->registerMiddleware('admin', function () {
+  if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+  }
+  // HR: korisnik nije u sessionu → redirect na login / EN: user not in session → redirect to login
+  if (empty($_SESSION['user'])) {
+    flash_set('error', _t('Morate biti prijavljeni za pristup ovoj stranici.'));
+    header('Location: ' . App::urlFor('login.form'));
+    return false;
+  }
+  // HR: korisnik je prijavljen, ali nije Admin / EN: user is logged in but not Admin
+  if (($_SESSION['user']['role_name'] ?? '') !== 'Admin') {
+    header('Location: ' . App::urlFor('admin.forbidden'));
+    return false;
+  }
+  return true;
+});
+
+// HR: Učitaj sve rute iz datoteke routes/web.php / EN: Load all routes from routes/web.php file
 $routes = require __DIR__ . '/../routes/web.php';
 $routes($router);
 
-// Pokreni router dispatch – obrađuje trenutni zahtjev.
-// Run router dispatch – handles the current request.
+// HR: Pokreni router dispatch – obrađuje trenutni zahtjev / EN: Run router dispatch – handles the current request
 $router->dispatch($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);

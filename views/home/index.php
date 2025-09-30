@@ -13,3 +13,6 @@ use App\Core\Csrf;
     ?>
   </div>
 </div>
+
+
+<p>Ovo je buduća naslovna stranica</p>

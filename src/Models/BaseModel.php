@@ -9,21 +9,21 @@ use PDO;
 use RuntimeException;
 
 /**
- * ===========================
+ * ===========================================================
  *  Hrvatski (Croatian)
- * ===========================
+ * ===========================================================
  * Apstraktna klasa BaseModel služi kao osnova za sve modele.
  * - Pohranjuje PDO konekciju.
- * - Definira naziv tablice ($table) i polja ($fields) koja model koristi.
- * - U konstruktoru automatski pokreće Migration::sync() kako bi sinkronizirao model s bazom (kreiranje tablice ili dodavanje kolona).
+ * - Definira naziv tablice i polja koja model koristi.
+ * - U konstruktoru automatski pokreće Migration::sync() kako bi sinkronizirao model s bazom.
  *
- * ===========================
+ * ===========================================================
  *  English
- * ===========================
+ * ===========================================================
  * The abstract BaseModel class serves as a foundation for all models.
  * - Stores the PDO connection.
- * - Defines the table name ($table) and the fields ($fields) used by the model.
- * - In the constructor, automatically calls Migration::sync() to synchronize the model with the database (create table or add columns).
+ * - Defines the table name and the fields used by the model.
+ * - In the constructor, automatically calls Migration::sync() to synchronize the model with the database.
  */
 abstract class BaseModel
 {
@@ -34,28 +34,37 @@ abstract class BaseModel
   private array $baseUuid = ['uuid' => 'varchar(36) NOT NULL PRIMARY KEY'];
   private array $baseCreatedAt = ['created_at' => 'timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP'];
 
-  // Inicijalizira model s PDO konekcijom i pokreće migraciju. / Initializes the model with PDO connection and runs migration.
+  /**
+   * HR: Konstruktor - inicijalizira model s PDO konekcijom i pokreće migraciju.
+   * EN: Constructor - initializes the model with PDO connection and runs migration.
+   *
+   * @param PDO $pdo HR: PDO instanca za rad s bazom / EN: PDO instance for database operations
+   * @return void
+   */
   public function __construct(PDO $pdo)
   {
     $this->pdo = $pdo;
     $this->fields = $this->baseUuid + $this->fields + $this->baseCreatedAt;
+    // HR: Dodaje obavezna polja uuid i created_at u definirana polja modela
+    // EN: Adds required fields uuid and created_at to the model's defined fields
     Migration::sync($this->table, $this->fields, $pdo);
   }
 
   /**
-   * Kreira novi zapis i vraća UUID novog zapisa.
-   * Creates a new record and returns the UUID of the new record.
+   * HR: Kreira novi zapis i vraća UUID tog zapisa.
+   * EN: Creates a new record and returns its UUID.
    *
-   * @param array $data Podaci za unos / Data to insert
-   * @return string UUID novog zapisa / UUID of the new record
-   * @throws RuntimeException Ako nije moguće unijeti zapis ili dobiti UUID / If unable to insert record or get UUID
+   * @param array $data HR: Podaci koji se umeću u tablicu / EN: Data to be inserted into the table
+   * @return string HR: UUID novog zapisa / EN: UUID of the newly created record
+   * @throws RuntimeException HR: Ako umetanje zapisa ne uspije ili UUID nije moguće dohvatiti / EN: If insertion fails or UUID cannot be retrieved
    */
   public function create(array $data): string
   {
-    // Filtriraj podatke samo na postojeća polja, izuzmi uuid i created_at
     $insertData = array_filter($data, function ($key) {
       return array_key_exists($key, $this->fields) && $key !== 'uuid' && $key !== 'created_at';
     }, ARRAY_FILTER_USE_KEY);
+    // HR: Filtrira samo polja koja postoje u modelu, izuzima uuid i created_at
+    // EN: Filters only fields defined in the model, excluding uuid and created_at
     if (empty($insertData)) {
       throw new RuntimeException(_t("Nedostaje obavezno polje"));
     }
@@ -74,7 +83,8 @@ abstract class BaseModel
       throw new RuntimeException(_t("Neuspješno umetanje zapisa"));
     }
 
-    // Pronađi red s istim podacima, koristi WHERE sa svim ubačenim poljima
+    // HR: Pronađi red s istim podacima, koristi WHERE sa svim ubačenim poljima
+    // EN: Find the row with the same data, using WHERE with all inserted fields
     $conditions = [];
     $params = [];
     foreach ($insertData as $key => $value) {
@@ -96,19 +106,22 @@ abstract class BaseModel
   }
 
   /**
-   * Ažurira zapis prema UUID-u.
-   * Updates a record by UUID.
+   * HR: Ažurira zapis u tablici prema UUID-u.
+   * EN: Updates a record in the table by UUID.
    *
-   * @param string $uuid UUID vrijednost / UUID value
-   * @param array $data Podaci za ažuriranje / Data to update
-   * @return bool True ako je ažurirano / True if updated
+   * @param string $uuid HR: UUID zapisa koji se ažurira / EN: UUID of the record to update
+   * @param array $data HR: Podaci za ažuriranje / EN: Data to update
+   * @return bool HR: True ako je ažuriranje uspjelo, inače false / EN: True if update succeeded, otherwise false
+   * @throws InvalidArgumentException HR: Ako nema valjanih podataka ili model ne sadrži UUID polje / EN: If no valid data or model does not contain UUID field
    */
   public function update(string $uuid, array $data): bool
   {
     if (!isset($this->fields['uuid'])) {
       throw new InvalidArgumentException(_t("Model ne sadrži UUID polje."));
+      // HR: Provjera da model sadrži uuid polje / EN: Check that the model contains uuid field
     }
-    // Filtriraj podatke samo na postojeća polja
+    // HR: Filtriraj podatke samo na postojeća polja
+    // EN: Filter data only on existing fields
     $updateFields = [];
     $params = [];
     foreach ($data as $key => $value) {
@@ -127,17 +140,19 @@ abstract class BaseModel
   }
 
   /**
-   * Pronalazi zapis prema vrijednosti određenog polja.
-   * Find a record by the value of a specific field.
+   * HR: Pronalazi zapis prema vrijednosti određenog polja.
+   * EN: Finds a record by the value of a given field.
    *
-   * @param string $field Naziv polja / Field name
-   * @param string $value Vrijednost polja / Field value
-   * @return array|null Zapis ili null ako nije pronađen / Record or null if not found
-   * @throws InvalidArgumentException Ako polje ne postoji u definiciji modela / If field does not exist in model definition
+   * @param string $field HR: Naziv polja za pretragu / EN: Field name to search by
+   * @param string $value HR: Vrijednost za pretragu / EN: Value to search for
+   * @return array|null HR: Zapis kao asocijativno polje ili null ako ne postoji / EN: Record as associative array or null if not found
+   * @throws InvalidArgumentException HR: Ako polje ne postoji u modelu / EN: If field does not exist in the model
    */
   public function findByField(string $field, string $value): ?array
   {
     if (!array_key_exists($field, $this->fields)) {
+      // HR: Ako polje ne postoji u definiciji modela, baci iznimku
+      // EN: If the field is not defined in the model, throw exception
       throw new InvalidArgumentException(sprintf(_t("Nevažeće polje: %s"), $field));
     }
 
@@ -149,13 +164,13 @@ abstract class BaseModel
   }
 
   /**
-   * Provjerava postoji li zapis prema vrijednosti određenog polja.
-   * Checks if a record exists by a given field and value.
+   * HR: Provjerava postoji li zapis prema vrijednosti određenog polja.
+   * EN: Checks if a record exists by the value of a given field.
    *
-   * @param string $field Naziv polja / Field name
-   * @param string $value Vrijednost polja / Field value
-   * @return bool True ako postoji / True if exists
-   * @throws InvalidArgumentException Ako polje ne postoji u definiciji modela / If field does not exist in model definition
+   * @param string $field HR: Naziv polja za provjeru / EN: Field name to check
+   * @param string $value HR: Vrijednost za provjeru / EN: Value to check
+   * @return bool HR: True ako zapis postoji, inače false / EN: True if record exists, otherwise false
+   * @throws InvalidArgumentException HR: Ako polje ne postoji u modelu / EN: If field does not exist in the model
    */
   public function existsByField(string $field, string $value): bool
   {
@@ -170,18 +185,43 @@ abstract class BaseModel
   }
 
   /**
-   * Broji sve zapise u tablici.
-   * Counts all records in the table.
+   * HR: Broji sve zapise u tablici.
+   * EN: Counts all records in the table.
    *
-   * @return int Broj zapisa / Number of records
+   * @return int HR: Ukupan broj zapisa / EN: Total number of records
    */
   public function countAll(): int
   {
     $sql = "SELECT COUNT(*) FROM `{$this->table}`";
+    // HR: SQL upit za brojanje svih zapisa u tablici
+    // EN: SQL query to count all records in the table
     $stmt = $this->pdo->prepare($sql);
     $stmt->execute();
     return (int)$stmt->fetchColumn();
   }
 
+  /**
+   * HR: Briše zapis prema UUID-u i vraća obrisani zapis ili false.
+   * EN: Deletes a record by UUID and returns the deleted record or false.
+   *
+   * @param string $uuid HR: UUID zapisa koji se briše / EN: UUID of the record to delete
+   * @return array|false HR: Asocijativno polje obrisanog zapisa ili false ako ne postoji / EN: Associative array of deleted record or false if not found
+   */
+  public function deleteByUuid(string $uuid): array|false
+  {
+    $stmt = $this->pdo->prepare("SELECT * FROM `{$this->table}` WHERE uuid = :uuid LIMIT 1");
+    // HR: Prvo dohvaća zapis koji treba obrisati
+    // EN: First fetch the record that should be deleted
+    $stmt->execute(['uuid' => $uuid]);
+    $record = $stmt->fetch(PDO::FETCH_ASSOC);
 
+    if (!$record) {
+      return false;
+    }
+
+    $deleteStmt = $this->pdo->prepare("DELETE FROM `{$this->table}` WHERE uuid = :uuid");
+    $deleteStmt->execute(['uuid' => $uuid]);
+
+    return $record;
+  }
 }
