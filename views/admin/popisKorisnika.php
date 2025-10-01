@@ -121,13 +121,13 @@ $search = $_GET['search'] ?? '';
         <th class="text-nowrap">
           <?= _t('Ime') ?>
           <?php if ($sort === 'ime' && $dir === 'asc'): ?>
-            <a href="<?= App::urlFor('admin.users') ?>?sort=ime&dir=desc&per_page=<?= $perPage ?>&page=<?= $page ?>"><i
+            <a href="<?= App::urlFor('admin.users') ?>?sort=ime&dir=desc&per_page=<?= $perPage ?>&page=<?= $page ?><?= $search !== '' ? '&search=' . urlencode($search) : '' ?>"><i
                 class="bi bi-sort-alpha-down"></i></a>
           <?php elseif ($sort === 'ime' && $dir === 'desc'): ?>
-            <a href="<?= App::urlFor('admin.users') ?>?sort=ime&dir=asc&per_page=<?= $perPage ?>&page=<?= $page ?>"><i
+            <a href="<?= App::urlFor('admin.users') ?>?sort=ime&dir=asc&per_page=<?= $perPage ?>&page=<?= $page ?><?= $search !== '' ? '&search=' . urlencode($search) : '' ?>"><i
                 class="bi bi-sort-alpha-down-alt"></i></a>
           <?php else: ?>
-            <a href="<?= App::urlFor('admin.users') ?>?sort=ime&dir=asc&per_page=<?= $perPage ?>&page=<?= $page ?>"><i
+            <a href="<?= App::urlFor('admin.users') ?>?sort=ime&dir=asc&per_page=<?= $perPage ?>&page=<?= $page ?><?= $search !== '' ? '&search=' . urlencode($search) : '' ?>"><i
                 class="bi bi-arrow-down-up text-muted"></i></a>
           <?php endif; ?>
         </th>
@@ -135,13 +135,13 @@ $search = $_GET['search'] ?? '';
           <?= _t('Prezime') ?>
           <?php if ($sort === 'prezime' && $dir === 'asc'): ?>
             <a
-              href="<?= App::urlFor('admin.users') ?>?sort=prezime&dir=desc&per_page=<?= $perPage ?>&page=<?= $page ?>"><i
+              href="<?= App::urlFor('admin.users') ?>?sort=prezime&dir=desc&per_page=<?= $perPage ?>&page=<?= $page ?><?= $search !== '' ? '&search=' . urlencode($search) : '' ?>"><i
                 class="bi bi-sort-alpha-down"></i></a>
           <?php elseif ($sort === 'prezime' && $dir === 'desc'): ?>
-            <a href="<?= App::urlFor('admin.users') ?>?sort=prezime&dir=asc&per_page=<?= $perPage ?>&page=<?= $page ?>"><i
+            <a href="<?= App::urlFor('admin.users') ?>?sort=prezime&dir=asc&per_page=<?= $perPage ?>&page=<?= $page ?><?= $search !== '' ? '&search=' . urlencode($search) : '' ?>"><i
                 class="bi bi-sort-alpha-down-alt"></i></a>
           <?php else: ?>
-            <a href="<?= App::urlFor('admin.users') ?>?sort=prezime&dir=asc&per_page=<?= $perPage ?>&page=<?= $page ?>"><i
+            <a href="<?= App::urlFor('admin.users') ?>?sort=prezime&dir=asc&per_page=<?= $perPage ?>&page=<?= $page ?><?= $search !== '' ? '&search=' . urlencode($search) : '' ?>"><i
                 class="bi bi-arrow-down-up text-muted"></i></a>
           <?php endif; ?>
         </th>
@@ -149,28 +149,28 @@ $search = $_GET['search'] ?? '';
           <?= _t('Korisničko ime') ?>
           <?php if ($sort === 'korisnicko_ime' && $dir === 'asc'): ?>
             <a
-              href="<?= App::urlFor('admin.users') ?>?sort=korisnicko_ime&dir=desc&per_page=<?= $perPage ?>&page=<?= $page ?>"><i
+              href="<?= App::urlFor('admin.users') ?>?sort=korisnicko_ime&dir=desc&per_page=<?= $perPage ?>&page=<?= $page ?><?= $search !== '' ? '&search=' . urlencode($search) : '' ?>"><i
                 class="bi bi-sort-alpha-down"></i></a>
           <?php elseif ($sort === 'korisnicko_ime' && $dir === 'desc'): ?>
             <a
-              href="<?= App::urlFor('admin.users') ?>?sort=korisnicko_ime&dir=asc&per_page=<?= $perPage ?>&page=<?= $page ?>"><i
+              href="<?= App::urlFor('admin.users') ?>?sort=korisnicko_ime&dir=asc&per_page=<?= $perPage ?>&page=<?= $page ?><?= $search !== '' ? '&search=' . urlencode($search) : '' ?>"><i
                 class="bi bi-sort-alpha-down-alt"></i></a>
           <?php else: ?>
             <a
-              href="<?= App::urlFor('admin.users') ?>?sort=korisnicko_ime&dir=asc&per_page=<?= $perPage ?>&page=<?= $page ?>"><i
+              href="<?= App::urlFor('admin.users') ?>?sort=korisnicko_ime&dir=asc&per_page=<?= $perPage ?>&page=<?= $page ?><?= $search !== '' ? '&search=' . urlencode($search) : '' ?>"><i
                 class="bi bi-arrow-down-up text-muted"></i></a>
           <?php endif; ?>
         </th>
         <th class="text-nowrap">
           <?= _t('Rola') ?>
           <?php if ($sort === 'role' && $dir === 'asc'): ?>
-            <a href="<?= App::urlFor('admin.users') ?>?sort=role&dir=desc&per_page=<?= $perPage ?>&page=<?= $page ?>"><i
+            <a href="<?= App::urlFor('admin.users') ?>?sort=role&dir=desc&per_page=<?= $perPage ?>&page=<?= $page ?><?= $search !== '' ? '&search=' . urlencode($search) : '' ?>"><i
                 class="bi bi-sort-alpha-down"></i></a>
           <?php elseif ($sort === 'role' && $dir === 'desc'): ?>
-            <a href="<?= App::urlFor('admin.users') ?>?sort=role&dir=asc&per_page=<?= $perPage ?>&page=<?= $page ?>"><i
+            <a href="<?= App::urlFor('admin.users') ?>?sort=role&dir=asc&per_page=<?= $perPage ?>&page=<?= $page ?><?= $search !== '' ? '&search=' . urlencode($search) : '' ?>"><i
                 class="bi bi-sort-alpha-down-alt"></i></a>
           <?php else: ?>
-            <a href="<?= App::urlFor('admin.users') ?>?sort=role&dir=asc&per_page=<?= $perPage ?>&page=<?= $page ?>"><i
+            <a href="<?= App::urlFor('admin.users') ?>?sort=role&dir=asc&per_page=<?= $perPage ?>&page=<?= $page ?><?= $search !== '' ? '&search=' . urlencode($search) : '' ?>"><i
                 class="bi bi-arrow-down-up text-muted"></i></a>
           <?php endif; ?>
         </th>
@@ -178,13 +178,13 @@ $search = $_GET['search'] ?? '';
           <?= _t('Email') ?>
           <?php if ($sort === 'email' && $dir === 'asc'): ?>
             <a
-              href="<?= App::urlFor('admin.users') ?>?sort=email&dir=desc&per_page=<?= $perPage ?>&page=<?= $page ?>"><i
+              href="<?= App::urlFor('admin.users') ?>?sort=email&dir=desc&per_page=<?= $perPage ?>&page=<?= $page ?><?= $search !== '' ? '&search=' . urlencode($search) : '' ?>"><i
                 class="bi bi-sort-alpha-down"></i></a>
           <?php elseif ($sort === 'email' && $dir === 'desc'): ?>
-            <a href="<?= App::urlFor('admin.users') ?>?sort=email&dir=asc&per_page=<?= $perPage ?>&page=<?= $page ?>"><i
+            <a href="<?= App::urlFor('admin.users') ?>?sort=email&dir=asc&per_page=<?= $perPage ?>&page=<?= $page ?><?= $search !== '' ? '&search=' . urlencode($search) : '' ?>"><i
                 class="bi bi-sort-alpha-down-alt"></i></a>
           <?php else: ?>
-            <a href="<?= App::urlFor('admin.users') ?>?sort=email&dir=asc&per_page=<?= $perPage ?>&page=<?= $page ?>"><i
+            <a href="<?= App::urlFor('admin.users') ?>?sort=email&dir=asc&per_page=<?= $perPage ?>&page=<?= $page ?><?= $search !== '' ? '&search=' . urlencode($search) : '' ?>"><i
                 class="bi bi-arrow-down-up text-muted"></i></a>
           <?php endif; ?>
         </th>
@@ -193,15 +193,15 @@ $search = $_GET['search'] ?? '';
           <?= _t('Kreiran') ?>
           <?php if ($sort === 'created_at' && $dir === 'asc'): ?>
             <a
-              href="<?= App::urlFor('admin.users') ?>?sort=created_at&dir=desc&per_page=<?= $perPage ?>&page=<?= $page ?>"><i
+              href="<?= App::urlFor('admin.users') ?>?sort=created_at&dir=desc&per_page=<?= $perPage ?>&page=<?= $page ?><?= $search !== '' ? '&search=' . urlencode($search) : '' ?>"><i
                 class="bi bi-sort-alpha-down"></i></a>
           <?php elseif ($sort === 'created_at' && $dir === 'desc'): ?>
             <a
-              href="<?= App::urlFor('admin.users') ?>?sort=created_at&dir=asc&per_page=<?= $perPage ?>&page=<?= $page ?>"><i
+              href="<?= App::urlFor('admin.users') ?>?sort=created_at&dir=asc&per_page=<?= $perPage ?>&page=<?= $page ?><?= $search !== '' ? '&search=' . urlencode($search) : '' ?>"><i
                 class="bi bi-sort-alpha-down-alt"></i></a>
           <?php else: ?>
             <a
-              href="<?= App::urlFor('admin.users') ?>?sort=created_at&dir=asc&per_page=<?= $perPage ?>&page=<?= $page ?>"><i
+              href="<?= App::urlFor('admin.users') ?>?sort=created_at&dir=asc&per_page=<?= $perPage ?>&page=<?= $page ?><?= $search !== '' ? '&search=' . urlencode($search) : '' ?>"><i
                 class="bi bi-arrow-down-up text-muted"></i></a>
           <?php endif; ?>
         </th>
