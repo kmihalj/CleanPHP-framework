@@ -24,6 +24,7 @@ use App\Core\Controller;
 use App\Models\Korisnik;
 use App\Models\Rola;
 use PDO;
+use PDOStatement;
 use RuntimeException;
 use App\Core\Mailer;
 use Exception;
@@ -79,6 +80,7 @@ class AdminController extends Controller
     $sort = $_GET['sort'] ?? 'prezime';
     $dir = strtolower($_GET['dir'] ?? 'asc');
     $perPage = $_GET['per_page'] ?? '10';
+    $search = $_GET['search'] ?? '';
 
     // HR: Validacija broja po stranici / EN: Validate per page value
     if (!in_array($perPage, $perPageOptions, true)) {
@@ -103,8 +105,21 @@ class AdminController extends Controller
     $orderBy = $allowedColumns[$sort] . ' ' . strtoupper($dir);
     $sql = "SELECT korisnik.uuid as uuid, ime, prezime, oib, korisnicko_ime, email, privremenaLozinka, role_uuid, korisnik.created_at as created_at, r.name AS role
                 FROM korisnik
-                LEFT JOIN role AS r ON korisnik.role_uuid = r.uuid
-                ORDER BY $orderBy";
+                LEFT JOIN role AS r ON korisnik.role_uuid = r.uuid";
+
+    if (!empty($search)) {
+      $sql .= " WHERE ime LIKE :s1
+              OR prezime LIKE :s2
+              OR oib LIKE :s3
+              OR korisnicko_ime LIKE :s4
+              OR email LIKE :s5
+              OR r.name LIKE :s6";
+    }
+
+    $sql .= " ORDER BY $orderBy";
+
+    $limit = null;
+    $offset = null;
     if ($perPage !== 'all') {
       $limit = (int)$perPage;
       $offset = ($page - 1) * $limit;
@@ -113,21 +128,41 @@ class AdminController extends Controller
 
     // HR: Priprema i izvršavanje upita / EN: Prepare and execute query
     $stmt = $this->pdo->prepare($sql);
+
+    if (!empty($search)) {
+      $this->bindSearchParams($stmt, $search);
+    }
     if ($perPage !== 'all') {
       $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
       $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
     }
+
     $stmt->execute();
     $korisnici = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // HR: Ukupan broj korisnika za paginaciju / EN: Total number of users for pagination
     $korisnikModel = new Korisnik($this->pdo);
-    $total = $korisnikModel->countAll();
+    if (!empty($search)) {
+      $countSql = "SELECT COUNT(*) FROM korisnik
+                   LEFT JOIN role AS r ON korisnik.role_uuid = r.uuid
+                   WHERE ime LIKE :s1
+                   OR prezime LIKE :s2
+                   OR oib LIKE :s3
+                   OR korisnicko_ime LIKE :s4
+                   OR email LIKE :s5
+                   OR r.name LIKE :s6";
+      $countStmt = $this->pdo->prepare($countSql);
+      $this->bindSearchParams($countStmt, $search);
+      $countStmt->execute();
+      $total = (int)$countStmt->fetchColumn();
+    } else {
+      $total = $korisnikModel->countAll();
+    }
 
     $roleModel = new Rola($this->pdo);
     $roleOptions = $roleModel->findAllRola();
 
-    $this->render('admin/popisKorisnika', [
+    $params = [
       'title' => _t('Popis korisnika'),
       'korisnici' => $korisnici,
       'total' => $total,
@@ -137,7 +172,11 @@ class AdminController extends Controller
       'sort' => $sort,
       'dir' => $dir,
       'roleOptions' => $roleOptions
-    ]);
+    ];
+    if (!empty($search)) {
+      $params['search'] = $search;
+    }
+    $this->render('admin/popisKorisnika', $params);
   }
 
   /**
@@ -175,7 +214,7 @@ class AdminController extends Controller
     }
 
     // HR: Preusmjeri natrag na popis korisnika s parametrima / EN: Redirect back to user listing with parameters
-    $this->redirectToUserList($perPage, $sort, $dir, $page);
+    $this->redirectToUserList($perPage, $sort, $dir, $page, $search);
   }
 
   /**
@@ -215,7 +254,7 @@ class AdminController extends Controller
           $sent = $mailer->send($to, $subject, $bodyHtml, $bodyText);
         } catch (Exception) {
           flash_set('error', _t('Došlo je do greške prilikom slanja e-maila. Pokušajte ponovo.'));
-          $this->redirectToUserList($perPage, $sort, $dir, $page);
+          $this->redirectToUserList($perPage, $sort, $dir, $page, $search);
         }
 
         if ($sent) {
@@ -227,7 +266,7 @@ class AdminController extends Controller
     else {
       flash_set('error', _t("Nije moguće resetirati lozinku za korisnika."));
     }
-    $this->redirectToUserList($perPage, $sort, $dir, $page);
+    $this->redirectToUserList($perPage, $sort, $dir, $page, $search);
   }
 
   /**
@@ -272,7 +311,7 @@ class AdminController extends Controller
       // HR: Postavi flash greške i stare unose, te preusmjeri nazad / EN: Set flash errors and old input, then redirect back
       flash_set('errors', $errors);
       flash_set('old_input', $_POST);
-      $this->redirectToUserList($perPage, $sort, $dir, $page);
+      $this->redirectToUserList($perPage, $sort, $dir, $page, $search);
     }
 
     // HR: Pripremi podatke za ažuriranje / EN: Prepare data for update
@@ -295,7 +334,7 @@ class AdminController extends Controller
       flash_set('error', sprintf(_t("Ažuriranje korisnika: %s %s nije uspjelo."), $ime, $prezime));
     }
     // HR: Preusmjeri na popis korisnika / EN: Redirect to user listing
-    $this->redirectToUserList($perPage, $sort, $dir, $page);
+    $this->redirectToUserList($perPage, $sort, $dir, $page, $search);
   }
 
   /**
@@ -306,19 +345,24 @@ class AdminController extends Controller
    * @param string $sort HR: Kolona po kojoj se sortira / EN: Column to sort by
    * @param string $dir HR: Smjer sortiranja (asc/desc) / EN: Sort direction (asc/desc)
    * @param int $page HR: Trenutni broj stranice / EN: Current page number
+   * @param string $search HR: pojam za pretragu / EN: search argument
    * @return void
    */
-  private function redirectToUserList(string $perPage, string $sort, string $dir, int $page): void
+  private function redirectToUserList(string $perPage, string $sort, string $dir, int $page, string $search): void
   {
     // HR: Preusmjeri natrag na popis korisnika s parametrima / EN: Redirect back to user listing with parameters
-    $query = http_build_query([
+    $params = [
       'per_page' => $perPage,
       'sort' => $sort,
       'dir' => $dir,
       'page' => $page,
-    ]);
+    ];
+    if (!empty($search)) {
+      $params['search'] = $search;
+    }
+    $query = http_build_query($params);
 
-    if ($perPage === '10' && $sort === 'prezime' && $dir === 'asc' && $page === 1) {
+    if ($perPage === '10' && $sort === 'prezime' && $dir === 'asc' && $page === 1 && empty($search)) {
       $query = '';
     }
 
@@ -356,6 +400,7 @@ class AdminController extends Controller
     $sort = $_POST['sort'] ?? 'prezime';
     $dir = strtolower($_POST['dir'] ?? 'asc');
     $page = isset($_POST['page']) ? max(1, (int)$_POST['page']) : 1;
+    $search = $_POST['search'] ?? null;
 
     $korisnikModel = new Korisnik($this->pdo);
 
@@ -365,7 +410,27 @@ class AdminController extends Controller
       'sort' => $sort,
       'dir' => $dir,
       'page' => $page,
+      'search' => $search,
       'korisnikModel' => $korisnikModel,
     ];
+  }
+
+  /**
+   * HR: HELPER Metoda za vezanje parametara pretrage na PDOStatement.
+   * EN: HELPER Method to bind search parameters to PDOStatement.
+   *
+   * @param PDOStatement $stmt
+   * @param string $search
+   * @return void
+   */
+  private function bindSearchParams(PDOStatement $stmt, string $search): void
+  {
+    $like = '%' . $search . '%';
+    $stmt->bindValue(':s1', $like);
+    $stmt->bindValue(':s2', $like);
+    $stmt->bindValue(':s3', $like);
+    $stmt->bindValue(':s4', $like);
+    $stmt->bindValue(':s5', $like);
+    $stmt->bindValue(':s6', $like);
   }
 }

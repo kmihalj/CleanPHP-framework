@@ -135,4 +135,8 @@ Lijep pozdrav.',
   'Email ne smije biti prazan.' => 'Email ne smije biti prazan.',
   'OIB je već registriran.' => 'OIB je već registriran.',
   'Korisnik: %s %s je uspješno ažuriran.' => 'Korisnik: %s %s je uspješno ažuriran.',
+  'Pretraži...' => 'Pretraži...',
+  'Pretraži' => 'Pretraži',
+  'Poništi pretragu' => 'Poništi pretragu',
+  'Pretraga korisnika' => 'Pretraga korisnika',
 );

@@ -35,6 +35,7 @@ use App\Models\Rola;
 // EN: Retrieve possible errors and previously entered values from flash messages
 $errors = flash_get('errors');
 $old = flash_get('old_input') ?? [];
+$search = $_GET['search'] ?? '';
 
 // HR: Naslov stranice - Popis korisnika
 // EN: Page title - User list
@@ -45,21 +46,45 @@ $old = flash_get('old_input') ?? [];
   // HR: Forma za odabir broja zapisa po stranici i primjenu filtera
   // EN: Form for selecting number of records per page and applying filters
   ?>
-  <form method="get" class="mb-3 d-flex align-items-center" action="<?= App::urlFor('admin.users') ?>">
-    <label for="per_page" class="me-2 mb-0"><?= _t('Broj po stranici:') ?></label>
-    <select id="per_page" name="per_page" class="form-select form-select-sm w-auto me-2">
-      <?php foreach ($perPageOptions as $opt): ?>
-        <option value="<?= $opt ?>" <?= ($perPage == $opt) ? 'selected' : '' ?>>
-          <?= $opt === 'all' ? _t('Svi') : $opt ?>
-        </option>
-      <?php endforeach; ?>
-    </select>
-    <input type="hidden" name="sort" value="<?= $sort ?>">
-    <input type="hidden" name="dir" value="<?= $dir ?>">
-    <input type="hidden" name="page" value="<?= $page ?>">
-    <input type="hidden" name="per_page_changed" value="1">
-    <button type="submit" class="btn btn-sm btn-primary ms-2"><?= _t('Prikaži') ?></button>
-  </form>
+  <div class="d-flex align-items-center mb-3">
+    <form method="get" class="d-flex align-items-center" action="<?= App::urlFor('admin.users') ?>">
+      <label for="per_page" class="me-2 mb-0"><?= _t('Broj po stranici:') ?></label>
+      <select id="per_page" name="per_page" class="form-select form-select-sm w-auto me-2">
+        <?php foreach ($perPageOptions as $opt): ?>
+          <option value="<?= $opt ?>" <?= ($perPage == $opt) ? 'selected' : '' ?>>
+            <?= $opt === 'all' ? _t('Svi') : $opt ?>
+          </option>
+        <?php endforeach; ?>
+      </select>
+      <input type="hidden" name="sort" value="<?= $sort ?>">
+      <input type="hidden" name="dir" value="<?= $dir ?>">
+      <input type="hidden" name="page" value="<?= $page ?>">
+      <?php if ($search !== ''): ?>
+        <input type="hidden" name="search" value="<?= htmlspecialchars($search) ?>">
+      <?php endif; ?>
+      <input type="hidden" name="per_page_changed" value="1">
+      <button type="submit" class="btn btn-sm btn-primary ms-2"><?= _t('Prikaži') ?></button>
+    </form>
+    <form method="get" class="mb-0 ms-auto d-flex align-items-center" action="<?= App::urlFor('admin.users') ?>">
+      <input type="hidden" name="per_page" value="<?= $perPage ?>">
+      <input type="hidden" name="sort" value="<?= $sort ?>">
+      <input type="hidden" name="dir" value="<?= $dir ?>">
+      <input type="hidden" name="page" value="1">
+      <?php if ($search !== ''): ?>
+        <input type="hidden" name="search" value="<?= htmlspecialchars($search) ?>">
+      <?php endif; ?>
+      <div class="input-group input-group-sm">
+        <label for="search" class="visually-hidden"><?= _t('Pretraga korisnika') ?></label>
+        <input type="text" class="form-control" id="search" name="search" placeholder="<?= _t('Pretraži...') ?>" value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
+        <button type="submit" class="btn btn-outline-secondary"><i class="bi bi-search"></i></button>
+        <?php if ($search !== ''): ?>
+          <a href="<?= App::urlFor('admin.users') ?>?per_page=<?= urlencode($perPage) ?>&sort=<?= urlencode($sort) ?>&dir=<?= urlencode($dir) ?>&page=1" class="btn btn-outline-danger">
+            <i class="bi bi-x-lg"></i>
+          </a>
+        <?php endif; ?>
+      </div>
+    </form>
+  </div>
 
   <?php
   // HR: Tablica s korisnicima, omogućuje sortiranje po kolonama
@@ -245,7 +270,7 @@ $old = flash_get('old_input') ?? [];
   // HR: Paginacija na dnu tablice
   // EN: Pagination at the bottom of the table
   ?>
-  <?= new HelperController()->renderPagination($page, $perPage, $total, $sort, $dir, App::urlFor('admin.users')) ?>
+  <?= new HelperController()->renderPagination($page, $perPage, $total, $sort, $dir, App::urlFor('admin.users'), $search ?? null) ?>
 
   <?php
   // HR: Modal za potvrdu brisanja korisnika
@@ -269,6 +294,9 @@ $old = flash_get('old_input') ?? [];
             <input type="hidden" name="sort" value="<?= htmlspecialchars($sort) ?>">
             <input type="hidden" name="dir" value="<?= htmlspecialchars($dir) ?>">
             <input type="hidden" name="page" value="<?= htmlspecialchars($page) ?>">
+            <?php if ($search !== ''): ?>
+              <input type="hidden" name="search" value="<?= htmlspecialchars($search) ?>">
+            <?php endif; ?>
             <button type="submit" class="btn btn-danger"><?= _t('Obriši') ?></button>
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?= _t('Odustani') ?></button>
           </form>
@@ -303,6 +331,9 @@ $old = flash_get('old_input') ?? [];
           <input type="hidden" name="sort" value="<?= htmlspecialchars($sort) ?>">
           <input type="hidden" name="dir" value="<?= htmlspecialchars($dir) ?>">
           <input type="hidden" name="page" value="<?= htmlspecialchars($page) ?>">
+          <?php if ($search !== ''): ?>
+            <input type="hidden" name="search" value="<?= htmlspecialchars($search) ?>">
+          <?php endif; ?>
           <button type="submit" class="btn btn-warning"><?= _t('Resetiraj lozinku') ?></button>
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?= _t('Odustani') ?></button>
         </form>
@@ -333,6 +364,9 @@ $old = flash_get('old_input') ?? [];
           <input type="hidden" name="sort" value="<?= htmlspecialchars($sort) ?>">
           <input type="hidden" name="dir" value="<?= htmlspecialchars($dir) ?>">
           <input type="hidden" name="page" value="<?= htmlspecialchars($page) ?>">
+          <?php if ($search !== ''): ?>
+          <input type="hidden" name="search" value="<?= htmlspecialchars($search) ?>">
+          <?php endif; ?>
           <div class="row">
             <div class="col-md-6 mb-3">
               <label for="editIme" class="form-label"><?= _t('Ime') ?></label>
