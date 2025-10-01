@@ -1,43 +1,43 @@
-/**
- * ===========================================================
- *  Hrvatski (Croatian)
- * ===========================================================
- * JavaScript datoteka za upravljanje modalnim prozorima na stranici popisa korisnika.
- * Omogućuje prikaz i popunjavanje podataka u modalima za brisanje i resetiranje lozinke korisnika.
- *
- * ===========================================================
- *  English
- * ===========================================================
- * JavaScript file for handling modal dialogs on the user list page.
- * Enables displaying and populating modals for deleting and resetting a user's password.
- */
-
 document.addEventListener('DOMContentLoaded', () => {
-  // HR: Elementi za DELETE modal (brisanje korisnika) / EN: Elements for DELETE modal (user deletion)
-  const deleteModal = document.getElementById('deleteModal');
-  const deleteUserName = document.getElementById('deleteUserName');
-  const deleteUserUuid = document.getElementById('deleteUserUuid');
+  // Kada je DOM sadržaj učitan, inicijaliziramo modale
+  // When the DOM content is loaded, initialize the modals
 
-  // HR: Elementi za RESET modal (resetiranje lozinke) / EN: Elements for RESET modal (password reset)
-  const resetModal = document.getElementById('resetModal');
-  const resetUserName = document.getElementById('resetUserName');
-  const resetUserUuid = document.getElementById('resetUserUuid');
+  // Inicijalizacija modala za brisanje korisnika
+  // Initialize the delete user modal
+  // Mapa atributa: deleteUserName iz data-name, deleteUserUuid iz data-uuid
+  // Attribute mapping: deleteUserName from data-name, deleteUserUuid from data-uuid
+  setupModal('deleteModal', { deleteUserName: 'data-name', deleteUserUuid: 'data-uuid' });
 
-  // HR: Postavljanje podataka kada se otvori DELETE modal / EN: Populate data when DELETE modal is shown
-  if (deleteModal) {
-    deleteModal.addEventListener('show.bs.modal', (event) => {
-      const button = event.relatedTarget;
-      deleteUserName.textContent = button.getAttribute('data-name');
-      deleteUserUuid.value = button.getAttribute('data-uuid');
-    });
-  }
+  // Inicijalizacija modala za resetiranje korisnika
+  // Initialize the reset user modal
+  // Mapa atributa: resetUserName iz data-name, resetUserUuid iz data-uuid
+  // Attribute mapping: resetUserName from data-name, resetUserUuid from data-uuid
+  setupModal('resetModal', { resetUserName: 'data-name', resetUserUuid: 'data-uuid' });
 
-  // HR: Postavljanje podataka kada se otvori RESET modal / EN: Populate data when RESET modal is shown
-  if (resetModal) {
-    resetModal.addEventListener('show.bs.modal', (event) => {
-      const button = event.relatedTarget;
-      resetUserName.textContent = button.getAttribute('data-name');
-      resetUserUuid.value = button.getAttribute('data-uuid');
-    });
+  // Inicijalizacija modala za uređivanje korisnika
+  // Initialize the edit user modal
+  // Mapa atributa: editUserUuid iz data-uuid, editIme iz data-ime, editPrezime iz data-prezime,
+  // editUsername iz data-username, editEmail iz data-email, editOib iz data-oib, editRole iz data-role-uuid
+  // Attribute mapping: editUserUuid from data-uuid, editIme from data-ime, editPrezime from data-prezime,
+  // editUsername from data-username, editEmail from data-email, editOib from data-oib, editRole from data-role-uuid
+  setupModal('editModal', {
+    editUserUuid: 'data-uuid',
+    editIme: 'data-ime',
+    editPrezime: 'data-prezime',
+    editUsername: 'data-username',
+    editEmail: 'data-email',
+    editOib: 'data-oib',
+    editRole: 'data-role-uuid'
+  });
+
+  // Ako postoje greške iz validacije za edit, automatski otvori modal
+  // If there are validation errors for edit, automatically open the modal
+  const hasEditErrors = document.getElementById('edit-verify')?.getAttribute('data-has-edit-errors');
+  if (hasEditErrors === '1') {
+    const editModalEl = document.getElementById('editModal');
+    if (editModalEl) {
+      const editModal = new bootstrap.Modal(editModalEl);
+      editModal.show();
+    }
   }
 });

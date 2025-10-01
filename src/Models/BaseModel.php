@@ -31,6 +31,12 @@ abstract class BaseModel
   protected string $table;
   protected array $fields = [];
 
+  /**
+   * HR: Polja koja moraju biti jedinstvena u tablici
+   * EN: Fields that must be unique in the table
+   */
+  protected array $uniqueFields = ['uuid'];
+
   private array $baseUuid = ['uuid' => 'varchar(36) NOT NULL PRIMARY KEY'];
   private array $baseCreatedAt = ['created_at' => 'timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP'];
 
@@ -150,6 +156,12 @@ abstract class BaseModel
    */
   public function findByField(string $field, string $value): ?array
   {
+    if (!in_array($field, $this->uniqueFields, true)) {
+      throw new InvalidArgumentException(sprintf(
+        _t("Polje %s nije jedinstveno i ne može se koristiti u findByField"),
+        $field
+      ));
+    }
     if (!array_key_exists($field, $this->fields)) {
       // HR: Ako polje ne postoji u definiciji modela, baci iznimku
       // EN: If the field is not defined in the model, throw exception
@@ -223,5 +235,50 @@ abstract class BaseModel
     $deleteStmt->execute(['uuid' => $uuid]);
 
     return $record;
+  }
+
+
+  /**
+   * HR: Dohvaća sve zapise iz tablice.
+   * EN: Fetches all records from the table.
+   *
+   * @param string|null $order HR: Naziv polja po kojem se sortira / EN: Field name to order by
+   * @param string|null $dir HR: Smjer sortiranja ('asc' ili 'desc') / EN: Sort direction ('asc' or 'desc')
+   * @param int|null $limit HR: Maksimalan broj zapisa za dohvat / EN: Maximum number of records to fetch
+   * @param int|null $offset HR: Broj zapisa za preskakanje prije dohvaćanja / EN: Number of records to skip before fetching
+   * @return array HR: Niz asocijativnih polja / EN: Array of associative arrays
+   * @throws InvalidArgumentException HR: Ako polje za sortiranje ne postoji u modelu / EN: If order field does not exist in the model
+   */
+  public function findAll(?string $order = null, ?string $dir = 'asc', ?int $limit = null, ?int $offset = null): array
+  {
+    $sql = "SELECT * FROM `{$this->table}`";
+    if ($order !== null) {
+      if (!array_key_exists($order, $this->fields)) {
+        throw new InvalidArgumentException(sprintf(_t("Nevažeće polje za sortiranje: %s"), $order));
+      }
+      // HR: Normaliziraj i validiraj smjer sortiranja / EN: Normalize and validate sort direction
+      $dirNorm = strtolower((string)$dir);
+      if (!in_array($dirNorm, ['asc', 'desc'], true)) {
+        $dirNorm = 'asc';
+      }
+      $sql .= " ORDER BY `$order` " . strtoupper($dirNorm);
+    }
+    if ($limit !== null) {
+      $sql .= " LIMIT :limit";
+      if ($offset !== null) {
+        $sql .= " OFFSET :offset";
+      }
+    }
+    // HR: Priprema SQL upit za dohvat svih slogova s opcionalnim redoslijedom, limitom i offsetom / EN: Prepare SQL query to fetch all rows with optional order, limit and offset
+    $stmt = $this->pdo->prepare($sql);
+    if ($limit !== null) {
+      $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+      if ($offset !== null) {
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+      }
+    }
+    $stmt->execute();
+    // HR: Vraća sve slogove kao niz asocijativnih polja / EN: Returns all rows as array of associative arrays
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
   }
 }

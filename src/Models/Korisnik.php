@@ -23,8 +23,82 @@ use RuntimeException;
 // HR: Model Korisnik nasljeđuje BaseModel / EN: Korisnik model extends BaseModel
 class Korisnik extends BaseModel
 {
+    /**
+     * @var string|null
+     * HR: Jedinstveni identifikator korisnika (UUID)
+     * EN: Unique user identifier (UUID)
+     */
+    public ?string $uuid = null;
+
+    /**
+     * @var string|null
+     * HR: Ime korisnika
+     * EN: User's first name
+     */
+    public ?string $ime = null;
+
+    /**
+     * @var string|null
+     * HR: Prezime korisnika
+     * EN: User's last name
+     */
+    public ?string $prezime = null;
+
+    /**
+     * @var string|null
+     * HR: OIB korisnika
+     * EN: User's OIB (personal identification number)
+     */
+    public ?string $oib = null;
+
+    /**
+     * @var string|null
+     * HR: Korisničko ime
+     * EN: Username
+     */
+    public ?string $korisnicko_ime = null;
+
+    /**
+     * @var string|null
+     * HR: Email adresa korisnika
+     * EN: User's email address
+     */
+    public ?string $email = null;
+
+    /**
+     * @var string|null
+     * HR: Hashirana lozinka
+     * EN: Hashed password
+     */
+    public ?string $lozinka = null;
+
+    /**
+     * @var bool|null
+     * HR: Privremena lozinka (true/false)
+     * EN: Temporary password flag (true/false)
+     */
+    public ?bool $privremenaLozinka = null;
+
+    /**
+     * @var string|null
+     * HR: Uloga korisnika (UUID strane tablice)
+     * EN: User's role UUID (foreign key)
+     */
+    public ?string $role_uuid = null;
+
+    /**
+     * @var string|null
+     * HR: Datum i vrijeme kreiranja zapisa
+     * EN: Record creation datetime
+     */
+    public ?string $created_at = null;
   protected string $table = 'korisnik';
   // HR: Naziv tablice u bazi / EN: Name of the table in the database
+  /**
+   * HR: Popis jedinstvenih polja za tablicu korisnik
+   * EN: List of unique fields for the korisnik table
+   */
+  protected array $uniqueFields = ['uuid', 'oib', 'korisnicko_ime', 'email'];
 
   protected array $fields = [
     'ime' => ['type' => 'VARCHAR(100)'], // HR: Ime korisnika / EN: User's first name
@@ -94,4 +168,30 @@ class Korisnik extends BaseModel
       return $password;
       // HR: Vrati čistu (ne-hashiranu) privremenu lozinku za slanje korisniku / EN: Return plain (non-hashed) temporary password to send to user
   }
+
+    /**
+     * HR: Pronalazi korisnika prema odabranom polju i vrijednosti.
+     * EN: Finds a user by the specified field and value.
+     *
+     * @param string $field HR: Naziv polja za pretragu / EN: Field name to search by
+     * @param string $value HR: Vrijednost polja za pretragu / EN: Field value to search for
+     * @return self|null HR: Vraća instancu Korisnik ako je pronađen, inače null / EN: Returns Korisnik instance if found, otherwise null
+     */
+    public function findKorisnik(string $field, string $value): ?self
+    {
+        $row = $this->findByField($field, $value);
+        if (!$row) {
+            return null;
+        }
+        $korisnik = new self($this->pdo);
+        foreach ([
+            'uuid', 'ime', 'prezime', 'oib', 'korisnicko_ime',
+            'email', 'lozinka', 'privremenaLozinka', 'role_uuid', 'created_at'
+        ] as $prop) {
+            if (array_key_exists($prop, $row)) {
+                $korisnik->$prop = $row[$prop];
+            }
+        }
+        return $korisnik;
+    }
 }

@@ -227,6 +227,22 @@ Authentication includes registration, login, logout, password change, forgotten 
 - Versioned migrations (migrations/ directory)
 - Unit tests (PHPUnit)
 
+## Napomene o optimizaciji / Optimization Notes
+
+### Hrvatski
+
+- JavaScript se koristi za dinamičko punjenje podataka u modal prozorima.
+  Time se izbjegava generiranje velikog broja modala na stranici (npr. po jedan za svakog korisnika),
+  što znatno smanjuje količinu HTML koda i opterećenje preglednika.
+  Koristi se samo jedan modal po akciji (npr. edit, delete, reset lozinke).
+
+### English
+
+- JavaScript is used for dynamically filling modal data.
+  This avoids generating a large number of modals on the page (e.g., one per user),
+  which significantly reduces the amount of HTML code and browser load.
+  Only a single modal per action (e.g., edit, delete, password reset) is used.
+
 ## Licenca / License
 
 ### Hrvatski

@@ -102,13 +102,21 @@ class Router
       $this->middlewareRegistry[$name] = function ($path, $method) use ($handler) {
         $result = $handler($path, $method);
         if ($result === false) {
-          // User is not authenticated. Store intended_url and redirect to login.
+          // User is not authenticated or not admin.
           if (session_status() !== PHP_SESSION_ACTIVE) {
             session_start();
           }
-          $_SESSION['intended_url'] = $_SERVER['REQUEST_URI'] ?? App::url();
-          $_SESSION['intended_middleware'] = 'admin';
-          header('Location: ' . App::urlFor('login.form'));
+          if (empty($_SESSION['user'])) {
+            // User not authenticated: store intended_url and redirect to login.
+            $_SESSION['intended_url'] = $_SERVER['REQUEST_URI'] ?? App::url();
+            $_SESSION['intended_middleware'] = 'admin';
+            header('Location: ' . App::urlFor('login.form'));
+          } else {
+            // User is authenticated but not admin: clear intended_url and redirect forbidden.
+            unset($_SESSION['intended_url'], $_SESSION['intended_middleware']); // clear any stored redirect
+            flash_set('error', _t("Nemate dozvolu za pristup željenoj stranici."));
+            header('Location: ' . App::urlFor('admin.forbidden'));
+          }
           exit;
         } elseif ($result === 'not_admin') {
           // User is authenticated but not admin. Do not override intended_url.
@@ -117,7 +125,7 @@ class Router
           }
           unset($_SESSION['intended_url'], $_SESSION['intended_middleware']); // clear any stored redirect
           flash_set('error', _t("Nemate dozvolu za pristup željenoj stranici."));
-          header('Location: ' . App::urlFor('index'));
+          header('Location: ' . App::urlFor('admin.forbidden'));
           exit;
         }
         return $result;

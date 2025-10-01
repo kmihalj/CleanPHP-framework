@@ -23,7 +23,7 @@ use App\Core\Controller;
 use App\Core\Csrf;
 use App\Core\Mailer;
 use App\Models\Korisnik;
-use App\Models\Role;
+use App\Models\Rola;
 use PDO;
 use PHPMailer\PHPMailer\Exception;
 use RuntimeException;
@@ -38,7 +38,7 @@ class AuthController extends Controller
    * @return void
    * @throws RuntimeException HR: Ako DB konfiguracija ne vraća PDO instancu. / EN: If DB config does not return a PDO instance.
    */
-  private Role $role;
+  private Rola $rola;
   private Korisnik $korisnik;
 
   public function __construct()
@@ -52,7 +52,7 @@ class AuthController extends Controller
     }
 
     // konstruktori odrade migraciju i default zapise ako ih ima u modelu
-    $this->role = new Role($pdo);
+    $this->rola = new Rola($pdo);
     $this->korisnik = new Korisnik($pdo);
   }
 
@@ -115,13 +115,7 @@ class AuthController extends Controller
     if (!empty($errors)) {
       flash_set('error', _t('Korisnik nije kreiran, provjerite podatke.'));
       flash_set('errors', $errors);
-      flash_set('old_input', [
-        'ime' => $ime,
-        'prezime' => $prezime,
-        'korisnicko_ime' => $korisnicko_ime,
-        'email' => $email,
-        'oib' => $oib,
-      ]);
+      flash_set('old_input', $_POST);
       header('Location: ' . App::urlFor('register.form'));
       exit;
     }
@@ -129,8 +123,8 @@ class AuthController extends Controller
     // HR: Odredi rolu prvog korisnika (Admin) ili kasnije (Registriran) / EN: Determine role (first user = Admin, others = Registered)
     $brojKorisnika = $this->korisnik->countAll();
     $rola = ($brojKorisnika === 0) ? 'Admin' : 'Registriran';
-    $role = $this->role->findByField('name', $rola);
-    $role_uuid = $role['uuid'] ?? null;
+    $role = $this->rola->findRola('name', $rola);
+    $role_uuid = $role?->uuid;
 
     // HR: Spremi korisnika u bazu (lozinka će biti hashirana u modelu) / EN: Save user to DB (password hashed in model)
     $this->korisnik->create([
@@ -176,8 +170,8 @@ class AuthController extends Controller
     $lozinka = $_POST['lozinka'] ?? '';
 
     // HR: Dohvati korisnika iz baze / EN: Fetch user from DB
-    $korisnik = $this->korisnik->findByField('korisnicko_ime', $korisnicko_ime);
-    $hash = (string)($korisnik['lozinka'] ?? '');
+    $korisnik = $this->korisnik->findKorisnik('korisnicko_ime', $korisnicko_ime);
+    $hash = $korisnik->lozinka ?? '';
 
     // HR: Provjeri lozinku / EN: Verify password
     if (!$korisnik || !password_verify($lozinka, $hash)) {
@@ -188,15 +182,15 @@ class AuthController extends Controller
 
     // HR: Spremi korisničke podatke u sesiju / EN: Save user data to session
     $_SESSION['user'] = [
-      'uuid' => $korisnik['uuid'],
-      'ime' => $korisnik['ime'],
-      'prezime' => $korisnik['prezime'],
-      'role_uuid' => $korisnik['role_uuid'],
-      'role_name' => $this->role->findByField('uuid', $korisnik['role_uuid'])['name'] ?? null,
+      'uuid' => $korisnik->uuid,
+      'ime' => $korisnik->ime,
+      'prezime' => $korisnik->prezime,
+      'role_uuid' => $korisnik->role_uuid,
+      'role_name' => $this->rola->findRola('uuid', $korisnik->role_uuid)?->name,
     ];
 
     // Dodaj samo ako je true
-    if (!empty($korisnik['privremenaLozinka'])) {
+    if (!empty($korisnik->privremenaLozinka)) {
       $_SESSION['user']['privremenaLozinka'] = true;
     }
 
@@ -218,7 +212,7 @@ class AuthController extends Controller
 
       if ($intendedMiddleware === 'admin' && ($_SESSION['user']['role_name'] ?? '') !== 'Admin') {
         flash_set('error', _t('Nemate dozvolu za pristup željenoj stranici.'));
-        $redirectUrl = App::urlFor('index');
+        $redirectUrl = App::urlFor('admin.forbidden');
       }
     } else {
       $redirectUrl = App::urlFor('index');
@@ -273,10 +267,10 @@ class AuthController extends Controller
     $korisnik = null;
     $resetPoEmailu = false;
     if ($this->korisnik->existsByField('email', $unos)) {
-      $korisnik = $this->korisnik->findByField('email', $unos);
+      $korisnik = $this->korisnik->findKorisnik('email', $unos);
       $resetPoEmailu = true;
     } elseif ($this->korisnik->existsByField('korisnicko_ime', $unos)) {
-      $korisnik = $this->korisnik->findByField('korisnicko_ime', $unos);
+      $korisnik = $this->korisnik->findKorisnik('korisnicko_ime', $unos);
     }
 
     // HR: Ako korisnik ne postoji, flash error i redirect / EN: If user does not exist, flash error and redirect
@@ -288,7 +282,7 @@ class AuthController extends Controller
 
     try {
       // HR: Generiraj novu privremenu lozinku i spremi / EN: Generate and save new temporary password
-      $novaLozinka = $this->korisnik->setTemporaryPassword($korisnik['uuid']);
+      $novaLozinka = $this->korisnik->setTemporaryPassword($korisnik->uuid);
     } catch (RuntimeException $e) {
       flash_set('error', $e->getMessage());
       header('Location: ' . App::urlFor('passwordReset.form'));
@@ -299,11 +293,11 @@ class AuthController extends Controller
     try {
       // HR: Slanje emaila s privremenom lozinkom / EN: Send email with temporary password
       $mailer = new Mailer($config);
-      $to = $korisnik['email'];
+      $to = $korisnik->email;
       $subject = _t('Resetiranje lozinke');
       if ($resetPoEmailu) {
-        $bodyHtml = sprintf(_t("Poštovani,<br><br>Vaša nova privremena lozinka je: <strong>%s</strong><br>Korisničko ime: <strong>%s</strong><br>Molimo prijavite se i promijenite lozinku.<br><br>Lijep pozdrav."), htmlspecialchars($novaLozinka, ENT_QUOTES, 'UTF-8'), htmlspecialchars($korisnik['korisnicko_ime'], ENT_QUOTES, 'UTF-8'));
-        $bodyText = sprintf(_t("Poštovani,\n\nVaša nova privremena lozinka je: %s\nKorisničko ime: %s\nMolimo prijavite se i promijenite lozinku.\n\nLijep pozdrav."), $novaLozinka, $korisnik['korisnicko_ime']);
+        $bodyHtml = sprintf(_t("Poštovani,<br><br>Vaša nova privremena lozinka je: <strong>%s</strong><br>Korisničko ime: <strong>%s</strong><br>Molimo prijavite se i promijenite lozinku.<br><br>Lijep pozdrav."), htmlspecialchars($novaLozinka, ENT_QUOTES, 'UTF-8'), htmlspecialchars($korisnik->korisnicko_ime, ENT_QUOTES, 'UTF-8'));
+        $bodyText = sprintf(_t("Poštovani,\n\nVaša nova privremena lozinka je: %s\nKorisničko ime: %s\nMolimo prijavite se i promijenite lozinku.\n\nLijep pozdrav."), $novaLozinka, $korisnik->korisnicko_ime);
       } else {
         $bodyHtml = sprintf(_t("Poštovani,<br><br>Vaša nova privremena lozinka je: <strong>%s</strong><br>Molimo prijavite se i promijenite lozinku.<br><br>Lijep pozdrav."), htmlspecialchars($novaLozinka, ENT_QUOTES, 'UTF-8'));
         $bodyText = sprintf(_t("Poštovani,\n\nVaša nova privremena lozinka je: %s\nMolimo prijavite se i promijenite lozinku.\n\nLijep pozdrav."), $novaLozinka);
@@ -356,9 +350,9 @@ class AuthController extends Controller
     $errors = [];
 
     $uuid = $_SESSION['user']['uuid'] ?? null;
-    $korisnik = $this->korisnik->findByField('uuid', $uuid);
+    $korisnik = $this->korisnik->findKorisnik('uuid', $uuid);
 
-    $hash_stara = (string)($korisnik['lozinka'] ?? '');
+    $hash_stara = $korisnik->lozinka ?? '';
 
     // HR: Validacija stare i nove lozinke / EN: Validate old and new password
     if (!password_verify($stara_lozinka, $hash_stara)) {

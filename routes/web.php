@@ -55,6 +55,8 @@ return function (Router $router) {
   $router->post('/admin/users/delete', [AdminController::class, 'brisanjeKorisnika'], ['admin'])->name('admin.users.delete');
   // HR: Ruta za resetiranje lozinke korisnika (admin) / EN: Route for resetting a user's password (admin)
   $router->post('/admin/users/reset-password', [AdminController::class, 'resetLozinkeKorisnika'], ['admin'])->name('admin.users.resetPassword');
+  // HR: Ruta za uređivanje korisnika (admin) / EN: Route for resetting a user's password (admin)
+  $router->post('/admin/users/edit', [AdminController::class, 'editKorisnika'], ['admin'])->name('admin.users.edit');
 
   // HR: Test rute grupirane pod /test / EN: Test routes grouped under /test
   $router->group('/test', [], function (Router $router) {
