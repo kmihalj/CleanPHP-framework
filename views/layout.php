@@ -25,19 +25,25 @@ use App\Core\App;
 use App\Core\I18n;
 
 ?>
-<!-- HR: Početak HTML dokumenta s definiranim jezikom prema odabranom locale-u -->
-<!-- EN: Start of HTML document with language set according to selected locale -->
+<?php
+// HR: Početak HTML dokumenta s definiranim jezikom prema odabranom locale-u
+// EN: Start of HTML document with language set according to selected locale
+?>
 <!DOCTYPE html>
 <html lang="<?= htmlspecialchars(I18n::getLocale(), ENT_QUOTES, 'UTF-8') ?>">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- HR: Naslov stranice - koristi varijablu $title ili zadanu vrijednost -->
-  <!-- EN: Page title - uses $title variable or default value -->
+  <?php
+  // HR: Naslov stranice - koristi varijablu $title ili zadanu vrijednost
+  // EN: Page title - uses $title variable or default value
+  ?>
   <title><?= isset($title) ? htmlspecialchars($title) : _t('Aplikacija') ?></title>
   <base href="<?= App::baseHref(); ?>">
-  <!-- HR: Učitavanje Bootstrap CSS i ikona iz lokalnih datoteka -->
-  <!-- EN: Loading Bootstrap CSS and icons from local files -->
+  <?php
+  // HR: Učitavanje Bootstrap CSS i ikona iz lokalnih datoteka
+  // EN: Loading Bootstrap CSS and icons from local files
+  ?>
   <link href="<?= App::url('css/bootstrap.min.css') ?>?v=<?= filemtime(__DIR__ . '/../public/css/bootstrap.min.css') ?>"
         rel="stylesheet">
   <link
@@ -47,14 +53,15 @@ use App\Core\I18n;
     src="<?= App::url('js/bootstrap.bundle.min.js') ?>?v=<?= filemtime(__DIR__ . '/../public/js/bootstrap.bundle.min.js') ?>"></script>
 </head>
 
-<!-- HR: Alternativna verzija - učitavanje Bootstrap CSS/JS i ikona preko CDN-a -->
-<!-- EN: Alternative version - loading Bootstrap CSS/JS and icons via CDN -->
-<!--
+<?php
+// HR: Alternativna verzija - učitavanje Bootstrap CSS/JS i ikona preko CDN-a
+// EN: Alternative version - loading Bootstrap CSS/JS and icons via CDN
+/*
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><?php /*= isset($title) ? htmlspecialchars($title) : _t('Aplikacija') */?></title>
-  <base href="<?php /*= App::baseHref(); */?>">
+  <title><?= isset($title) ? htmlspecialchars($title) : _t('Aplikacija') ?></title>
+  <base href="<?= App::baseHref(); ?>">
   <link
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
     rel="stylesheet"
@@ -68,7 +75,8 @@ use App\Core\I18n;
     integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
     crossorigin="anonymous"></script>
 </head>
--->
+*/
+?>
 
 
 <body>
@@ -78,8 +86,10 @@ use App\Core\I18n;
 ?>
 <?php include __DIR__ . '/menu.php'; ?>
 
-<!-- HR: Blok za prikaz flash poruka (uspjeh i greška) -->
-<!-- EN: Block for displaying flash messages (success and error) -->
+<?php
+// HR: Blok za prikaz flash poruka (uspjeh i greška)
+// EN: Block for displaying flash messages (success and error)
+?>
 <div class="container-fluid mt-3 px-3">
   <?php if ($msg = flash_get('success')): ?>
     <div class="alert alert-success alert-dismissible" role="alert">
@@ -96,8 +106,10 @@ use App\Core\I18n;
   <?php endif; ?>
 </div>
 
-<!-- HR: Glavni sadržaj stranice - dinamički umetnut iz kontrolera -->
-<!-- EN: Main page content - dynamically injected from the controller -->
+<?php
+// HR: Glavni sadržaj stranice - dinamički umetnut iz kontrolera
+// EN: Main page content - dynamically injected from the controller
+?>
 <main class="container-fluid px-3">
   <?= $content ?? '' ?>
 </main>

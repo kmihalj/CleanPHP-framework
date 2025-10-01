@@ -24,13 +24,21 @@ $errors = flash_get('errors');
 
 <div class="row justify-content-center">
   <div class="col-md-6">
-    <!-- HR: Naslov stranice - promjena lozinke / EN: Page title - change password -->
+    <?php
+    // HR: Naslov stranice - promjena lozinke
+    // EN: Page title - change password
+    ?>
     <h1><?= _t('Promjena lozinke') ?></h1>
-    <!-- HR: Forma za promjenu lozinke, koristi POST metodu i CSRF zaštitu -->
-    <!-- EN: Password change form, uses POST method and CSRF protection -->
+    <?php
+    // HR: Forma za promjenu lozinke, koristi POST metodu i CSRF zaštitu
+    // EN: Password change form, uses POST method and CSRF protection
+    ?>
     <form method="post" action="<?= App::urlFor('passwordChange.submit') ?>" autocomplete="off">
       <?= Csrf::input(); ?>
-      <!-- HR: Polje za unos stare lozinke / EN: Input field for old password -->
+      <?php
+      // HR: Polje za unos stare lozinke
+      // EN: Input field for old password
+      ?>
       <div class="mb-3">
         <label for="lozinka" class="form-label"><?= _t('Stara lozinka') ?></label>
         <input type="password" class="form-control <?= !empty($errors['lozinka']) ? 'is-invalid' : '' ?>" id="lozinka"
@@ -41,7 +49,10 @@ $errors = flash_get('errors');
           </div>
         <?php endif; ?>
       </div>
-      <!-- HR: Polje za unos nove lozinke / EN: Input field for new password -->
+      <?php
+      // HR: Polje za unos nove lozinke
+      // EN: Input field for new password
+      ?>
       <div class="mb-3">
         <label for="new_password" class="form-label"><?= _t('Nova lozinka') ?></label>
         <input type="password" class="form-control <?= !empty($errors['new_password']) ? 'is-invalid' : '' ?>"
@@ -52,7 +63,10 @@ $errors = flash_get('errors');
           </div>
         <?php endif; ?>
       </div>
-      <!-- HR: Polje za unos potvrde nove lozinke / EN: Input field for confirm new password -->
+      <?php
+      // HR: Polje za unos potvrde nove lozinke
+      // EN: Input field for confirm new password
+      ?>
       <div class="mb-3">
         <label for="new_password_confirm" class="form-label"><?= _t('Potvrda nove lozinke') ?></label>
         <input type="password" class="form-control <?= !empty($errors['new_password_confirm']) ? 'is-invalid' : '' ?>"
@@ -63,7 +77,10 @@ $errors = flash_get('errors');
           </div>
         <?php endif; ?>
       </div>
-      <!-- HR: Gumb za potvrdu i slanje forme / EN: Button to confirm and submit form -->
+      <?php
+      // HR: Gumb za potvrdu i slanje forme
+      // EN: Button to confirm and submit form
+      ?>
       <div class="d-flex justify-content-center">
         <button type="submit" class="btn btn-primary"><?= _t('Promijeni lozinku') ?></button>
       </div>

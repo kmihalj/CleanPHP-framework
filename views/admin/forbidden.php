@@ -15,15 +15,24 @@
 ?>
 <div class="container mt-5">
   <div class="text-center">
-    <!-- HR: Naslov poruke o zabranjenom pristupu / EN: Title of forbidden access message -->
+    <?php
+    // HR: Naslov poruke o zabranjenom pristupu
+    // EN: Title of forbidden access message
+    ?>
     <h1 class="display-5 text-danger mb-4"><?= _t('Zabranjen pristup') ?></h1>
 
-    <!-- HR: Objašnjenje da je dio aplikacije dostupan samo administratorima / EN: Explanation that section is for administrators only -->
+    <?php
+    // HR: Objašnjenje da je dio aplikacije dostupan samo administratorima
+    // EN: Explanation that section is for administrators only
+    ?>
     <p class="lead">
       <?= _t('Ovaj dio aplikacije dostupan je isključivo administratorima.') ?>
     </p>
 
-    <!-- HR: Uputa korisniku da se obrati administratoru sustava ako misli da treba imati pristup / EN: Instruction to contact system administrator if user thinks they should have access -->
+    <?php
+    // HR: Uputa korisniku da se obrati administratoru sustava ako misli da treba imati pristup
+    // EN: Instruction to contact system administrator if user thinks they should have access
+    ?>
     <p>
       <?= _t('Ako mislite da bi trebali imati pristup, obratite se administratoru sustava.') ?>
     </p>

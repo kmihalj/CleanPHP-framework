@@ -77,6 +77,7 @@ class AdminController extends Controller
     $perPageOptions = ['10', '25', 'all'];
 
     // HR: Get params from GET (or POST)
+    // HR: Opcionalni parametar za pretragu korisnika / EN: Optional search parameter for filtering users
     $sort = $_GET['sort'] ?? 'prezime';
     $dir = strtolower($_GET['dir'] ?? 'asc');
     $perPage = $_GET['per_page'] ?? '10';
@@ -98,7 +99,7 @@ class AdminController extends Controller
     if (!array_key_exists($sort, $allowedColumns)) {
       $sort = 'prezime';
     }
-    // HR: Validacija smjera sortiranja / EN: Validate sort direction
+    // HR: Izgradi SQL upit s JOIN-om na role / EN: Build SQL query with JOIN on roles
     $dir = ($dir === 'desc') ? 'desc' : 'asc';
 
     // HR: Izgradi SQL upit s JOIN-om na role / EN: Build SQL query with JOIN on roles
@@ -107,6 +108,8 @@ class AdminController extends Controller
                 FROM korisnik
                 LEFT JOIN role AS r ON korisnik.role_uuid = r.uuid";
 
+    // HR: Dodaje uvjet pretrage u SQL upit ako je pretraga aktivna
+    // EN: Adds search condition to SQL query if search is active
     if (!empty($search)) {
       $sql .= " WHERE ime LIKE :s1
               OR prezime LIKE :s2
@@ -129,6 +132,8 @@ class AdminController extends Controller
     // HR: Priprema i izvršavanje upita / EN: Prepare and execute query
     $stmt = $this->pdo->prepare($sql);
 
+    // HR: Vezanje parametara pretrage na pripremljeni upit
+    // EN: Bind search parameters to the prepared statement
     if (!empty($search)) {
       $this->bindSearchParams($stmt, $search);
     }
@@ -140,7 +145,8 @@ class AdminController extends Controller
     $stmt->execute();
     $korisnici = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // HR: Ukupan broj korisnika za paginaciju / EN: Total number of users for pagination
+    // HR: Ako je pretraga aktivna, ukupan broj korisnika računa se posebnim upitom s WHERE uvjetom.
+    // EN: If search is active, total user count is calculated with a separate query including the WHERE condition.
     $korisnikModel = new Korisnik($this->pdo);
     if (!empty($search)) {
       $countSql = "SELECT COUNT(*) FROM korisnik
@@ -173,6 +179,8 @@ class AdminController extends Controller
       'dir' => $dir,
       'roleOptions' => $roleOptions
     ];
+    // HR: Ako je pretraga aktivna, proslijedi parametar pretrage u prikaz
+    // EN: If search is active, pass the search parameter to the view
     if (!empty($search)) {
       $params['search'] = $search;
     }
@@ -201,7 +209,27 @@ class AdminController extends Controller
 
       // HR: Provjeri treba li smanjiti broj stranice nakon brisanja / EN: Check if page number should decrease after deletion
       if ($perPage !== 'all') {
-        $total = $korisnikModel->countAll();
+        if (!empty($search)) {
+          // HR: Ako postoji pretraga, računaj broj preostalih rezultata s WHERE uvjetom
+          // EN: If search is active, count remaining results with WHERE condition
+          $countSql = "SELECT COUNT(*) FROM korisnik
+                       LEFT JOIN role AS r ON korisnik.role_uuid = r.uuid
+                       WHERE ime LIKE :s1
+                       OR prezime LIKE :s2
+                       OR oib LIKE :s3
+                       OR korisnicko_ime LIKE :s4
+                       OR email LIKE :s5
+                       OR r.name LIKE :s6";
+          $countStmt = $this->pdo->prepare($countSql);
+          $this->bindSearchParams($countStmt, $search);
+          $countStmt->execute();
+          $total = (int)$countStmt->fetchColumn();
+        } else {
+          // HR: Bez pretrage, broj korisnika računa se klasično
+          // EN: Without search, count all users normally
+          $total = $korisnikModel->countAll();
+        }
+
         $offset = ($page - 1) * (int)$perPage;
         if ($offset >= $total && $page > 1) {
           $page--;
@@ -380,6 +408,7 @@ class AdminController extends Controller
    *   sort: string,
    *   dir: string,
    *   page: int,
+   *   search: string,
    *   korisnikModel: Korisnik
    * }
    * @throws RuntimeException Ako zahtjev nije POST ili UUID nije postavljen.
@@ -410,7 +439,7 @@ class AdminController extends Controller
       'sort' => $sort,
       'dir' => $dir,
       'page' => $page,
-      'search' => $search,
+      'search' => $search ?? '',
       'korisnikModel' => $korisnikModel,
     ];
   }

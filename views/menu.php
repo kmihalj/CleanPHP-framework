@@ -27,10 +27,10 @@ use App\Core\I18n;
 
 ?>
 
-<!-- HR: Glavna navigacijska traka aplikacije / EN: Main application navigation bar -->
+<?php // HR: Glavna navigacijska traka aplikacije / EN: Main application navigation bar ?>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-2">
   <div class="container-fluid">
-    <!-- HR: Link na početnu stranicu s imenom aplikacije / EN: Link to home page with app name -->
+    <?php // HR: Link na početnu stranicu s imenom aplikacije / EN: Link to home page with app name ?>
     <a class="navbar-brand" href="<?= App::url(); ?>"><?= _t('CMS Auth Skeleton') ?></a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
             aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,7 +39,7 @@ use App\Core\I18n;
     <div class="collapse navbar-collapse" id="navbarContent">
       <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
 
-        <!-- HR: Stavka izbornika - Početna stranica / EN: Menu item - Home page -->
+        <?php // HR: Stavka izbornika - Početna stranica / EN: Menu item - Home page ?>
         <li class="nav-item">
           <a class="nav-link" href="<?= App::urlFor('index'); ?>"><?= _t('Početna') ?></a>
         </li>
@@ -54,13 +54,13 @@ use App\Core\I18n;
               <?= _t('Admin') ?>
             </a>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminDropdown">
-              <!-- HR: Link na popis korisnika (samo za administratore) / EN: Link to user list (admin only) -->
+              <?php // HR: Link na popis korisnika (samo za administratore) / EN: Link to user list (admin only) ?>
               <li><a class="dropdown-item" href="<?= App::urlFor('admin.users'); ?>"><?= _t('Popis korisnika') ?></a></li>
             </ul>
           </li>
         <?php endif; ?>
 
-        <!-- HR: Padajući izbornik za odabir jezika / EN: Dropdown menu for language selection -->
+        <?php // HR: Padajući izbornik za odabir jezika / EN: Dropdown menu for language selection ?>
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" id="langDropdown" role="button" data-bs-toggle="dropdown"
              aria-expanded="false">
@@ -73,7 +73,7 @@ use App\Core\I18n;
         </li>
 
         <?php if (!isset($_SESSION['user'])): ?>
-        <!-- HR: Padajući izbornik za goste (prijava i registracija) / EN: Dropdown menu for guests (login and register) -->
+        <?php // HR: Padajući izbornik za goste (prijava i registracija) / EN: Dropdown menu for guests (login and register) ?>
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown"
              aria-expanded="false">
@@ -85,17 +85,17 @@ use App\Core\I18n;
           </ul>
         </li>
         <?php else: ?>
-        <!-- HR: Padajući izbornik za prijavljenog korisnika s imenom i opcijama / EN: Dropdown menu for logged-in user with name and options -->
+        <?php // HR: Padajući izbornik za prijavljenog korisnika s imenom i opcijama / EN: Dropdown menu for logged-in user with name and options ?>
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown"
              aria-expanded="false">
             <?= htmlspecialchars($_SESSION['user']['ime'] . ' ' . $_SESSION['user']['prezime']) ?>
           </a>
           <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-            <!-- HR: Link na promjenu lozinke / EN: Link to password change -->
+            <?php // HR: Link na promjenu lozinke / EN: Link to password change ?>
             <li><a class="dropdown-item" href="<?= App::urlFor('passwordChange.form'); ?>"><?= _t('Promjena lozinke') ?></a></li>
-            <li><hr class="dropdown-divider"></li> <!-- HR: Razdjelnik stavki izbornika / EN: Divider between menu items -->
-            <!-- HR: Forma za odjavu korisnika s CSRF zaštitom / EN: User logout form with CSRF protection -->
+            <li><hr class="dropdown-divider"></li> <?php // HR: Razdjelnik stavki izbornika / EN: Divider between menu items ?>
+            <?php // HR: Forma za odjavu korisnika s CSRF zaštitom / EN: User logout form with CSRF protection ?>
             <li>
               <form method="post" action="<?= App::urlFor('logout.submit'); ?>">
                 <?= Csrf::input() ?>

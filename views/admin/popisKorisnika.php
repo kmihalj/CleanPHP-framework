@@ -35,6 +35,8 @@ use App\Models\Rola;
 // EN: Retrieve possible errors and previously entered values from flash messages
 $errors = flash_get('errors');
 $old = flash_get('old_input') ?? [];
+// HR: Definiranje varijable za pohranu vrijednosti pretrage iz GET parametra
+// EN: Define variable to store search value from GET parameter
 $search = $_GET['search'] ?? '';
 
 // HR: Naslov stranice - Popis korisnika
@@ -59,12 +61,21 @@ $search = $_GET['search'] ?? '';
       <input type="hidden" name="sort" value="<?= $sort ?>">
       <input type="hidden" name="dir" value="<?= $dir ?>">
       <input type="hidden" name="page" value="<?= $page ?>">
+      <?php
+      // HR: Hidden polje za search parametar u formi za broj po stranici
+      // EN: Hidden input for search parameter in per_page form
+      ?>
       <?php if ($search !== ''): ?>
         <input type="hidden" name="search" value="<?= htmlspecialchars($search) ?>">
       <?php endif; ?>
       <input type="hidden" name="per_page_changed" value="1">
       <button type="submit" class="btn btn-sm btn-primary ms-2"><?= _t('Prikaži') ?></button>
     </form>
+
+    <?php
+    // HR: Forma za pretragu korisnika (search input i gumbi)
+    // EN: Form for user search (search input and buttons)
+    ?>
     <form method="get" class="mb-0 ms-auto d-flex align-items-center" action="<?= App::urlFor('admin.users') ?>">
       <input type="hidden" name="per_page" value="<?= $perPage ?>">
       <input type="hidden" name="sort" value="<?= $sort ?>">
@@ -74,10 +85,22 @@ $search = $_GET['search'] ?? '';
         <input type="hidden" name="search" value="<?= htmlspecialchars($search) ?>">
       <?php endif; ?>
       <div class="input-group input-group-sm">
+        <?php
+        // HR: Search input polje za unos pojma pretrage
+        // EN: Search input field for entering search term
+        ?>
         <label for="search" class="visually-hidden"><?= _t('Pretraga korisnika') ?></label>
         <input type="text" class="form-control" id="search" name="search" placeholder="<?= _t('Pretraži...') ?>" value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
+        <?php
+        // HR: Gumb za pokretanje pretrage (ikona povećala)
+        // EN: Button to start search (magnifier icon)
+        ?>
         <button type="submit" class="btn btn-outline-secondary"><i class="bi bi-search"></i></button>
         <?php if ($search !== ''): ?>
+          <?php
+          // HR: Gumb za resetiranje pretrage (ikona X)
+          // EN: Button to reset search (X icon)
+          ?>
           <a href="<?= App::urlFor('admin.users') ?>?per_page=<?= urlencode($perPage) ?>&sort=<?= urlencode($sort) ?>&dir=<?= urlencode($dir) ?>&page=1" class="btn btn-outline-danger">
             <i class="bi bi-x-lg"></i>
           </a>
@@ -270,6 +293,10 @@ $search = $_GET['search'] ?? '';
   // HR: Paginacija na dnu tablice
   // EN: Pagination at the bottom of the table
   ?>
+  <?php
+  // HR: Prosljeđivanje search parametra u paginaciju
+  // EN: Passing search parameter to pagination
+  ?>
   <?= new HelperController()->renderPagination($page, $perPage, $total, $sort, $dir, App::urlFor('admin.users'), $search ?? null) ?>
 
   <?php
@@ -294,6 +321,10 @@ $search = $_GET['search'] ?? '';
             <input type="hidden" name="sort" value="<?= htmlspecialchars($sort) ?>">
             <input type="hidden" name="dir" value="<?= htmlspecialchars($dir) ?>">
             <input type="hidden" name="page" value="<?= htmlspecialchars($page) ?>">
+            <?php
+            // HR: Hidden input za search parametar u formi za brisanje
+            // EN: Hidden input for search parameter in delete form
+            ?>
             <?php if ($search !== ''): ?>
               <input type="hidden" name="search" value="<?= htmlspecialchars($search) ?>">
             <?php endif; ?>
@@ -331,6 +362,10 @@ $search = $_GET['search'] ?? '';
           <input type="hidden" name="sort" value="<?= htmlspecialchars($sort) ?>">
           <input type="hidden" name="dir" value="<?= htmlspecialchars($dir) ?>">
           <input type="hidden" name="page" value="<?= htmlspecialchars($page) ?>">
+          <?php
+          // HR: Hidden input za search parametar u formi za reset lozinke
+          // EN: Hidden input for search parameter in reset password form
+          ?>
           <?php if ($search !== ''): ?>
             <input type="hidden" name="search" value="<?= htmlspecialchars($search) ?>">
           <?php endif; ?>
@@ -346,7 +381,6 @@ $search = $_GET['search'] ?? '';
 // HR: Modal za uređivanje korisnika. Specifično uključuje podršku za prikaz grešaka validacije i automatsko ponovno otvaranje ako greške postoje.
 // EN: Modal for editing user details. Specifically includes support for displaying validation errors and automatically reopening if errors are present.
 ?>
-
 <div id="edit-verify" <?= (!empty($errors['editIme']) || !empty($errors['editPrezime']) || !empty($errors['editUsername']) || !empty($errors['editEmail']) || !empty($errors['editOib'])) ? 'data-has-edit-errors="1"' : '' ?>></div>
 <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -364,6 +398,10 @@ $search = $_GET['search'] ?? '';
           <input type="hidden" name="sort" value="<?= htmlspecialchars($sort) ?>">
           <input type="hidden" name="dir" value="<?= htmlspecialchars($dir) ?>">
           <input type="hidden" name="page" value="<?= htmlspecialchars($page) ?>">
+          <?php
+          // HR: Hidden input za search parametar u formi za uređivanje korisnika
+          // EN: Hidden input for search parameter in edit user form
+          ?>
           <?php if ($search !== ''): ?>
           <input type="hidden" name="search" value="<?= htmlspecialchars($search) ?>">
           <?php endif; ?>
