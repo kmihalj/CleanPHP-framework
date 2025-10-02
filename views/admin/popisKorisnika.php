@@ -216,7 +216,13 @@ $search = $_GET['search'] ?? '';
       $locales = $appConfig['locales'] ?? [];
       $locale = I18n::getLocale();
       $fmtLocale = $locales[$locale] ?? $locale;
-      $formatter = new IntlDateFormatter($fmtLocale, IntlDateFormatter::MEDIUM, IntlDateFormatter::SHORT);
+      // HR: Provjera postoji li IntlDateFormatter za lokalizirano formatiranje datuma
+      // EN: Check if IntlDateFormatter exists for localized date formatting
+      if (class_exists('IntlDateFormatter')) {
+        $formatter = new IntlDateFormatter($fmtLocale, IntlDateFormatter::MEDIUM, IntlDateFormatter::SHORT);
+      } else {
+        $formatter = null;
+      }
       $currentUserUuid = $_SESSION['user']['uuid'] ?? null;
       ?>
       <?php
@@ -254,7 +260,13 @@ $search = $_GET['search'] ?? '';
           <td class="text-nowrap">
             <?php
             $timestamp = strtotime($korisnik['created_at']);
-            echo $formatter->format($timestamp);
+            // HR: Ako IntlDateFormatter nije dostupan, koristi standardni PHP date() kao fallback
+            // EN: If IntlDateFormatter is not available, use standard PHP date() as fallback
+            if ($formatter) {
+              echo $formatter->format($timestamp);
+            } else {
+              echo date("d.m.Y H:i", $timestamp);
+            }
             ?>
           </td>
           <td class="text-center text-nowrap">
