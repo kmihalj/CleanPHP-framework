@@ -358,9 +358,9 @@ $search = $_GET['search'] ?? '';
     </div>
   </div>
 
-<script src="<?= App::url('js/modal.js') ?>?v=<?= filemtime(__DIR__ . '/../public/js/modal.js') ?>"></script>
+<script src="<?= App::url('js/modal.js') ?>?v=<?= filemtime(__DIR__ . '/../../public/js/modal.js') ?>"></script>
 <script
-  src="<?= App::url('js/popisKorisnika.php.js') ?>?v=<?= filemtime(__DIR__ . '/../public/js/popisKorisnika.php.js') ?>"></script>
+  src="<?= App::url('js/popisKorisnika.php.js') ?>?v=<?= filemtime(__DIR__ . '/../../public/js/popisKorisnika.php.js') ?>"></script>
 
 <?php
 // HR: Modal za potvrdu resetiranja lozinke korisnika
