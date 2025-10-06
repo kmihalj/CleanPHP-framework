@@ -10,6 +10,9 @@
  * ===========================================================
  * Helper function for easily populating modal dialogs
  * based on the data-* attributes of the triggering button.
+ *
+ * HR: Podržava i checkbox grupe (npr. role) koristeći CSV vrijednosti iz data-* atributa.
+ * EN: Also supports checkbox groups (e.g., roles) using CSV values from data-* attributes.
  */
 
 function setupModal(modalId, mappings) {
@@ -24,19 +27,26 @@ function setupModal(modalId, mappings) {
     // Iterate over each [targetId, attr] pair in the mappings object
     for (const [targetId, attr] of Object.entries(mappings)) {
       const el = document.getElementById(targetId);
+      if (!el) continue;
 
-      // Provjeravamo postoji li element s danim ID-jem
-      // Check if an element with the given ID exists
-      if (el) {
-        // Ako je element input ili select, postavljamo njegovu vrijednost
-        // If the element is an input or select, set its value
-        if (el.tagName === 'INPUT' || el.tagName === 'SELECT') {
-          el.value = button.getAttribute(attr) || '';
-        } else {
-          // Inače, postavljamo tekstualni sadržaj elementa
-          // Otherwise, set the text content of the element
-          el.textContent = button.getAttribute(attr) || '';
-        }
+      const dataVal = button.getAttribute(attr) || '';
+
+      // HR: Jedan checkbox/radio – postavi checked prema dataVal (podržava '1', 'true' ili točnu vrijednost).
+      // EN: Single checkbox/radio – set checked based on dataVal ('1', 'true' or exact value).
+      if (el.tagName === 'INPUT' && (el.type === 'checkbox' || el.type === 'radio')) {
+        const valLower = (typeof dataVal === 'string') ? dataVal.toLowerCase() : '';
+        el.checked = (dataVal === '1') || (valLower === 'true') || (dataVal === el.value);
+        continue;
+      }
+
+      // HR: Standardni form elementi – upiši vrijednost.
+      // EN: Standard form controls – set the value.
+      if (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA') {
+        el.value = dataVal;
+      } else {
+        // HR: Inače tretiraj kao tekstualni čvor.
+        // EN: Otherwise treat as a text node.
+        el.textContent = dataVal;
       }
     }
   });

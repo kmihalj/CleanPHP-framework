@@ -47,15 +47,24 @@ use App\Core\I18n;
         <?php
         // HR: Ako je korisnik Admin, prikaži padajući izbornik s administratorskim opcijama
         // EN: If the user is Admin, display dropdown with administrative options
-        if (isset($_SESSION['user']['role_name']) && $_SESSION['user']['role_name'] === 'Admin'): ?>
+        if (isset($_SESSION['user']['roles']) && in_array('Admin', array_column($_SESSION['user']['roles'], 'name'))): ?>
+          <?php // HR: Omogući multi-level dropdown u BS5 bez dodatnog JS-a (auto-close izvan) / EN: Enable multi-level dropdown in BS5 without extra JS (auto-close outside) ?>
           <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown"
-               aria-expanded="false">
+            <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
               <?= _t('Admin') ?>
             </a>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminDropdown">
               <?php // HR: Link na popis korisnika (samo za administratore) / EN: Link to user list (admin only) ?>
               <li><a class="dropdown-item" href="<?= App::urlFor('admin.users'); ?>"><?= _t('Popis korisnika') ?></a></li>
+              <?php // HR: Podizbornik za administraciju s linkom na uloge / EN: Submenu for administration with link to roles ?>
+              <li class="dropend">
+                <a class="dropdown-item dropdown-toggle" href="#" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                  <?= _t('Administracija') ?>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li><a class="dropdown-item" href="<?= App::urlFor('admin.roles'); ?>"><?= _t('Role') ?></a></li>
+                </ul>
+              </li>
             </ul>
           </li>
         <?php endif; ?>

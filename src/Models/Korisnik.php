@@ -81,17 +81,11 @@ class Korisnik extends BaseModel
 
     /**
      * @var string|null
-     * HR: Uloga korisnika (UUID strane tablice)
-     * EN: User's role UUID (foreign key)
-     */
-    public ?string $role_uuid = null;
-
-    /**
-     * @var string|null
      * HR: Datum i vrijeme kreiranja zapisa
      * EN: Record creation datetime
      */
     public ?string $created_at = null;
+
   protected string $table = 'korisnik';
   // HR: Naziv tablice u bazi / EN: Name of the table in the database
   /**
@@ -108,16 +102,6 @@ class Korisnik extends BaseModel
     'email' => ['type' => 'VARCHAR(150)', 'unique' => true], // HR: Jedinstvena email adresa / EN: Unique email address
     'lozinka' => ['type' => 'VARCHAR(255)'], // HR: Hashirana lozinka / EN: Hashed password
     'privremenaLozinka' => ['type' => 'BOOLEAN', 'default' => false], // HR: Flag za privremenu lozinku / EN: Flag for temporary password
-    'role_uuid' => [
-      'type' => 'CHAR(36)',
-      'foreign' => [
-        'table' => 'role',
-        'column' => 'uuid',
-        'on_delete' => 'CASCADE',
-        'on_update' => 'CASCADE'
-      ]
-      // HR: Strani ključ povezuje korisnika s tablicom role / EN: Foreign key links user to the roles table
-    ]
   ];
 
   /**

@@ -70,7 +70,7 @@ class AdminController extends Controller
       'prezime' => 'korisnik.prezime',
       'korisnicko_ime' => 'korisnik.korisnicko_ime',
       'email' => 'korisnik.email',
-      'role' => 'r.name',
+      'role' => 'roles',
       'created_at' => 'korisnik.created_at'
     ];
     // HR: Dozvoljene opcije za broj po stranici / EN: Allowed per page options
@@ -102,11 +102,21 @@ class AdminController extends Controller
     // HR: Izgradi SQL upit s JOIN-om na role / EN: Build SQL query with JOIN on roles
     $dir = ($dir === 'desc') ? 'desc' : 'asc';
 
-    // HR: Izgradi SQL upit s JOIN-om na role / EN: Build SQL query with JOIN on roles
+    // HR: Izgradi SQL upit s JOIN-om na korisnik_rola i role, te grupiranjem rola po korisniku
     $orderBy = $allowedColumns[$sort] . ' ' . strtoupper($dir);
-    $sql = "SELECT korisnik.uuid as uuid, ime, prezime, oib, korisnicko_ime, email, privremenaLozinka, role_uuid, korisnik.created_at as created_at, r.name AS role
-                FROM korisnik
-                LEFT JOIN role AS r ON korisnik.role_uuid = r.uuid";
+    $sql = "SELECT korisnik.uuid AS uuid,
+                   korisnik.ime,
+                   korisnik.prezime,
+                   korisnik.oib,
+                   korisnik.korisnicko_ime,
+                   korisnik.email,
+                   korisnik.privremenaLozinka,
+                   korisnik.created_at AS created_at,
+                   GROUP_CONCAT(r.name ORDER BY r.name SEPARATOR ', ') AS roles,
+                   GROUP_CONCAT(r.uuid ORDER BY r.name SEPARATOR ',') AS role_uuid
+            FROM korisnik
+            LEFT JOIN korisnik_rola kr ON korisnik.uuid = kr.korisnik_uuid
+            LEFT JOIN role r ON kr.role_uuid = r.uuid";
 
     // HR: Dodaje uvjet pretrage u SQL upit ako je pretraga aktivna
     // EN: Adds search condition to SQL query if search is active
@@ -116,9 +126,14 @@ class AdminController extends Controller
               OR oib LIKE :s3
               OR korisnicko_ime LIKE :s4
               OR email LIKE :s5
-              OR r.name LIKE :s6";
+              OR EXISTS (
+                SELECT 1 FROM korisnik_rola kr2
+                JOIN role r2 ON kr2.role_uuid = r2.uuid
+                WHERE kr2.korisnik_uuid = korisnik.uuid AND r2.name LIKE :s6
+              )";
     }
 
+    $sql .= " GROUP BY korisnik.uuid";
     $sql .= " ORDER BY $orderBy";
 
     $limit = null;
@@ -149,14 +164,20 @@ class AdminController extends Controller
     // EN: If search is active, total user count is calculated with a separate query including the WHERE condition.
     $korisnikModel = new Korisnik($this->pdo);
     if (!empty($search)) {
-      $countSql = "SELECT COUNT(*) FROM korisnik
-                   LEFT JOIN role AS r ON korisnik.role_uuid = r.uuid
+      $countSql = "SELECT COUNT(DISTINCT korisnik.uuid)
+                   FROM korisnik
+                   LEFT JOIN korisnik_rola kr ON korisnik.uuid = kr.korisnik_uuid
+                   LEFT JOIN role r ON kr.role_uuid = r.uuid
                    WHERE ime LIKE :s1
                    OR prezime LIKE :s2
                    OR oib LIKE :s3
                    OR korisnicko_ime LIKE :s4
                    OR email LIKE :s5
-                   OR r.name LIKE :s6";
+                   OR EXISTS (
+                      SELECT 1 FROM korisnik_rola kr2
+                      JOIN role r2 ON kr2.role_uuid = r2.uuid
+                      WHERE kr2.korisnik_uuid = korisnik.uuid AND r2.name LIKE :s6
+                   )";
       $countStmt = $this->pdo->prepare($countSql);
       $this->bindSearchParams($countStmt, $search);
       $countStmt->execute();
@@ -200,6 +221,14 @@ class AdminController extends Controller
     $params = $this->validateAndGetPostParams();
     extract($params);
 
+    // HR: Prvo brišemo sve uloge dodijeljene korisniku iz tablice korisnik_rola.
+    // EN: First, delete all roles assigned to the user from korisnik_rola table.
+    $deleteRolesStmt = $this->pdo->prepare("DELETE FROM korisnik_rola WHERE korisnik_uuid = :uuid");
+    $deleteRolesStmt->bindValue(':uuid', $uuid);
+    $deleteRolesStmt->execute();
+
+    // HR: Zatim brišemo samog korisnika.
+    // EN: Then, delete the user itself.
     $deleted = $korisnikModel->deleteByUuid($uuid);
 
     if ($deleted) {
@@ -212,14 +241,20 @@ class AdminController extends Controller
         if (!empty($search)) {
           // HR: Ako postoji pretraga, računaj broj preostalih rezultata s WHERE uvjetom
           // EN: If search is active, count remaining results with WHERE condition
-          $countSql = "SELECT COUNT(*) FROM korisnik
-                       LEFT JOIN role AS r ON korisnik.role_uuid = r.uuid
+          $countSql = "SELECT COUNT(DISTINCT korisnik.uuid)
+                       FROM korisnik
+                       LEFT JOIN korisnik_rola kr ON korisnik.uuid = kr.korisnik_uuid
+                       LEFT JOIN role r ON kr.role_uuid = r.uuid
                        WHERE ime LIKE :s1
                        OR prezime LIKE :s2
                        OR oib LIKE :s3
                        OR korisnicko_ime LIKE :s4
                        OR email LIKE :s5
-                       OR r.name LIKE :s6";
+                       OR EXISTS (
+                          SELECT 1 FROM korisnik_rola kr2
+                          JOIN role r2 ON kr2.role_uuid = r2.uuid
+                          WHERE kr2.korisnik_uuid = korisnik.uuid AND r2.name LIKE :s6
+                       )";
           $countStmt = $this->pdo->prepare($countSql);
           $this->bindSearchParams($countStmt, $search);
           $countStmt->execute();
@@ -316,7 +351,10 @@ class AdminController extends Controller
     $oib = trim($_POST['editOib'] ?? '');
     $korisnicko_ime = trim($_POST['editUsername'] ?? '');
     $email = trim($_POST['editEmail'] ?? '');
-    $role_uuid = trim($_POST['editRole'] ?? '');
+    $editRoles = $_POST['editRole'] ?? [];
+    if (!is_array($editRoles)) {
+      $editRoles = [$editRoles];
+    }
 
     $errors = [];
 
@@ -335,6 +373,11 @@ class AdminController extends Controller
       $errors['editEmail'] = _t('Email je već zauzet.');
     }
 
+    // HR: Provjera da je odabrana barem jedna rola / EN: Check that at least one role is selected
+    if (empty($editRoles)) {
+      $errors['editRole'] = _t('Korisnik mora imati barem jednu rolu.');
+    }
+
     if (!empty($errors)) {
       // HR: Postavi flash greške i stare unose, te preusmjeri nazad / EN: Set flash errors and old input, then redirect back
       flash_set('errors', $errors);
@@ -342,19 +385,33 @@ class AdminController extends Controller
       $this->redirectToUserList($perPage, $sort, $dir, $page, $search);
     }
 
-    // HR: Pripremi podatke za ažuriranje / EN: Prepare data for update
+    // HR: Pripremi podatke za ažuriranje (bez role_uuid) / EN: Prepare data for update (without role_uuid)
     $data = [
       'ime' => $ime,
       'prezime' => $prezime,
       'oib' => $oib,
       'korisnicko_ime' => $korisnicko_ime,
       'email' => $email,
-      'role_uuid' => $role_uuid,
     ];
 
     // HR: Pokušaj ažurirati korisnika / EN: Attempt to update user
     $updated = $korisnikModel->update($uuid, $data);
-    if ($updated) {
+
+    // HR: Briši sve postojeće uloge korisnika i dodaj nove / EN: Delete all current user roles and insert new ones
+    $deleteStmt = $this->pdo->prepare("DELETE FROM korisnik_rola WHERE korisnik_uuid = :uuid");
+    $deleteStmt->bindValue(':uuid', $uuid);
+    $deleteStmt->execute();
+
+    $successRoles = true;
+    foreach ($editRoles as $roleUuid) {
+      $insertStmt = $this->pdo->prepare("INSERT INTO korisnik_rola (korisnik_uuid, role_uuid) VALUES (:korisnik_uuid, :role_uuid)");
+      $successRoles = $successRoles && $insertStmt->execute([
+        ':korisnik_uuid' => $uuid,
+        ':role_uuid' => $roleUuid
+      ]);
+    }
+
+    if ($updated && $successRoles) {
       // HR: Uspješno ažuriranje / EN: Successful update
       flash_set('success', sprintf(_t("Korisnik: %s %s je uspješno ažuriran."), $ime, $prezime));
     } else {

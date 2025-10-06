@@ -17,9 +17,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Inicijalizacija modala za uređivanje korisnika
   // Initialize the edit user modal
   // Mapa atributa: editUserUuid iz data-uuid, editIme iz data-ime, editPrezime iz data-prezime,
-  // editUsername iz data-username, editEmail iz data-email, editOib iz data-oib, editRole iz data-role-uuid
+  // editUsername iz data-username, editEmail iz data-email, editOib iz data-oib
   // Attribute mapping: editUserUuid from data-uuid, editIme from data-ime, editPrezime from data-prezime,
-  // editUsername from data-username, editEmail from data-email, editOib from data-oib, editRole from data-role-uuid
+  // editUsername from data-username, editEmail from data-email, editOib from data-oib
   setupModal('editModal', {
     editUserUuid: 'data-uuid',
     editIme: 'data-ime',
@@ -27,8 +27,37 @@ document.addEventListener('DOMContentLoaded', () => {
     editUsername: 'data-username',
     editEmail: 'data-email',
     editOib: 'data-oib',
-    editRole: 'data-role-uuid'
+    editRoles: 'data-role-uuid'
   });
+
+  // Nakon inicijalizacije edit modala dodaj logiku za check-boxeve rola
+  // After initializing the edit modal, add logic for role checkboxes
+  const editModalEl = document.getElementById('editModal');
+  if (editModalEl) {
+    editModalEl.addEventListener('show.bs.modal', (event) => {
+      const button = event.relatedTarget;
+      if (!button) return;
+
+      // Dohvati sve role korisnika iz data atributa
+      // Get all user roles from data attribute
+      let roleUuidsRaw = button.getAttribute('data-role-uuid') || '';
+      roleUuidsRaw = roleUuidsRaw.replace(/^["']|["']$/g, '');
+      let userRoles = roleUuidsRaw
+        .split(',')
+        .map(r => r.trim())
+        .filter(r => r !== '');
+
+      // Resetiraj sve checkboxeve
+      // Reset all checkboxes
+      const roleCheckboxes = editModalEl.querySelectorAll('input[name="editRole[]"]');
+      if (!roleCheckboxes || roleCheckboxes.length === 0) {
+        console.warn('No role checkboxes found with selector input[name="editRole[]"]');
+      }
+      roleCheckboxes.forEach(cb => {
+        cb.checked = userRoles.includes(cb.value.trim());
+      });
+    });
+  }
 
   // Ako postoje greške iz validacije za edit, automatski otvori modal
   // If there are validation errors for edit, automatically open the modal

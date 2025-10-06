@@ -37,8 +37,16 @@ abstract class BaseModel
    */
   protected array $uniqueFields = ['uuid'];
 
-  private array $baseUuid = ['uuid' => 'varchar(36) NOT NULL PRIMARY KEY'];
-  private array $baseCreatedAt = ['created_at' => 'timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP'];
+  private array $baseUuid = [
+    'uuid' => ['type' => 'varchar(36)',
+    'primary' => true,
+    'default' => 'UUID()']];
+  private array $baseCreatedAt = [
+    'created_at' => [
+      'type' => 'timestamp',
+      'default' => 'CURRENT_TIMESTAMP'
+    ]
+  ];
 
   /**
    * HR: Konstruktor - inicijalizira model s PDO konekcijom i pokreće migraciju.

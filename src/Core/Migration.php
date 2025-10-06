@@ -125,6 +125,11 @@ class Migration
    */
   public static function setCollate(mixed $def): array
   {
+      // Ako je definicija string, normaliziraj u array
+      if (is_string($def)) {
+          $def = ['type' => $def];
+      }
+
       $type = $def['type'] ?? 'VARCHAR(255)';
       // HR: Tip podatka, default VARCHAR(255) / EN: Data type, default VARCHAR(255)
 

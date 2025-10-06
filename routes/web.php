@@ -20,6 +20,7 @@
  */
 
 use App\Controllers\AdminController;
+use App\Controllers\RolaController;
 use App\Controllers\HomeController;
 use App\Controllers\AuthController;
 use App\Controllers\LocaleController;
@@ -57,6 +58,13 @@ return function (Router $router) {
   $router->post('/admin/users/reset-password', [AdminController::class, 'resetLozinkeKorisnika'], ['admin'])->name('admin.users.resetPassword');
   // HR: Ruta za uređivanje korisnika (admin) / EN: Route for resetting a user's password (admin)
   $router->post('/admin/users/edit', [AdminController::class, 'editKorisnika'], ['admin'])->name('admin.users.edit');
+
+  // HR: Ruta za administraciju rola (admin) / EN: Route for role administration (admin)
+  $router->get('/admin/roles', [RolaController::class, 'index'], ['admin'])->name('admin.roles');
+  // HR: Ruta za dodavanje nove role (admin) / EN: Route for creating a new role (admin)
+  $router->post('/admin/roles', [RolaController::class, 'create'], ['admin'])->name('admin.roles.create');
+  // HR: Ruta za brisanje role (admin) / EN: Route for deleting a role (admin)
+  $router->post('/admin/roles/delete', [RolaController::class, 'delete'], ['admin'])->name('admin.roles.delete');
 
   // HR: Test rute grupirane pod /test / EN: Test routes grouped under /test
   $router->group('/test', [], function (Router $router) {

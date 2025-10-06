@@ -115,9 +115,13 @@ class Rola extends BaseModel
    *
    * @return self[] HR: Niz objekata Rola / EN: Array of Rola objects
    */
-  public function findAllRola(): array
+  public function findAllRola(?string $dir = 'asc'): array
   {
-    $rows = $this->findAll('name');
+    $dir = strtolower($dir);
+    if ($dir !== 'asc' && $dir !== 'desc') {
+      $dir = 'asc';
+    }
+    $rows = $this->findAll('name', $dir);
     $roles = [];
     foreach ($rows as $row) {
       $role = new self($this->pdo);

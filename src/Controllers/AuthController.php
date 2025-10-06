@@ -23,6 +23,7 @@ use App\Core\Controller;
 use App\Core\Csrf;
 use App\Core\Mailer;
 use App\Models\Korisnik;
+use App\Models\KorisnikRola;
 use App\Models\Rola;
 use PDO;
 use PHPMailer\PHPMailer\Exception;
@@ -41,6 +42,8 @@ class AuthController extends Controller
   private Rola $rola;
   private Korisnik $korisnik;
 
+  private KorisnikRola $korisnikRola;
+
   public function __construct()
   {
     // Učitaj konfiguraciju baze; datoteka može vratiti PDO ili niz s 'pdo'
@@ -54,6 +57,7 @@ class AuthController extends Controller
     // konstruktori odrade migraciju i default zapise ako ih ima u modelu
     $this->rola = new Rola($pdo);
     $this->korisnik = new Korisnik($pdo);
+    $this->korisnikRola = new KorisnikRola($pdo);
   }
 
   /**
@@ -126,16 +130,25 @@ class AuthController extends Controller
     $role = $this->rola->findRola('name', $rola);
     $role_uuid = $role?->uuid;
 
-    // HR: Spremi korisnika u bazu (lozinka će biti hashirana u modelu) / EN: Save user to DB (password hashed in model)
-    $this->korisnik->create([
+    // HR: Spremi korisnika u bazu (lozinka se hashira ovdje) i dohvati njegov UUID
+    // EN: Save the user (password hashed here) and get the new user's UUID
+    $korisnikUuid = $this->korisnik->create([
       'ime' => $ime,
       'prezime' => $prezime,
       'korisnicko_ime' => $korisnicko_ime,
       'email' => $email,
       'oib' => $oib,
       'lozinka' => password_hash($lozinka, PASSWORD_DEFAULT),
-      'role_uuid' => $role_uuid,
     ]);
+
+    // HR: Poveži korisnika s početnom ulogom u pivot tablici korisnik_rola
+    // EN: Link the user with the initial role in the pivot table korisnik_rola
+    if (!empty($role_uuid)) {
+      $this->korisnikRola->create([
+        'korisnik_uuid' => $korisnikUuid,
+        'role_uuid' => $role_uuid,
+      ]);
+    }
 
     flash_set('success', _t('Korisnik uspješno kreiran. Možete se prijaviti'));
     header('Location: ' . App::urlFor('login.form'));
@@ -180,13 +193,27 @@ class AuthController extends Controller
       exit;
     }
 
-    // HR: Spremi korisničke podatke u sesiju / EN: Save user data to session
+    // HR: Dohvati sve role za korisnika iz pivot tablice korisnik_rola
+    $korisnik_roles = $this->korisnikRola->findAllByKorisnikUuid($korisnik->uuid);
+    $roles = [];
+    if (!empty($korisnik_roles)) {
+      foreach ($korisnik_roles as $kr) {
+        $rola = $this->rola->findRola('uuid', $kr->role_uuid);
+        if ($rola) {
+          $roles[] = [
+            'uuid' => $rola->uuid,
+            'name' => $rola->name,
+          ];
+        }
+      }
+    }
+
+    // HR: Spremi korisničke podatke i role u sesiju / EN: Save user data and roles to session
     $_SESSION['user'] = [
       'uuid' => $korisnik->uuid,
       'ime' => $korisnik->ime,
       'prezime' => $korisnik->prezime,
-      'role_uuid' => $korisnik->role_uuid,
-      'role_name' => $this->rola->findRola('uuid', $korisnik->role_uuid)?->name,
+      'roles' => $roles,
     ];
 
     // Dodaj samo ako je true
@@ -210,9 +237,19 @@ class AuthController extends Controller
       $intendedMiddleware = $_SESSION['intended_middleware'] ?? null;
       unset($_SESSION['intended_url'], $_SESSION['intended_middleware']);
 
-      if ($intendedMiddleware === 'admin' && ($_SESSION['user']['role_name'] ?? '') !== 'Admin') {
-        flash_set('error', _t('Nemate dozvolu za pristup željenoj stranici.'));
-        $redirectUrl = App::urlFor('admin.forbidden');
+      if ($intendedMiddleware === 'admin') {
+        // Provjeri postoji li rola s imenom "Admin" u korisničkim rolama
+        $hasAdmin = false;
+        foreach ($_SESSION['user']['roles'] as $role) {
+          if (isset($role['name']) && $role['name'] === 'Admin') {
+            $hasAdmin = true;
+            break;
+          }
+        }
+        if (!$hasAdmin) {
+          flash_set('error', _t('Nemate dozvolu za pristup željenoj stranici.'));
+          $redirectUrl = App::urlFor('admin.forbidden');
+        }
       }
     } else {
       $redirectUrl = App::urlFor('index');

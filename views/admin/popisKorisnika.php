@@ -237,6 +237,10 @@ $search = $_GET['search'] ?? '';
         ?>
         <tr>
           <td class="text-center text-nowrap">
+            <?php
+            // HR: Dugme za uređivanje sada koristi više rola; role i role_uuid polja su polja, pa ih kodiramo kao JSON za frontend
+            // EN: Edit button now supports multiple roles; role and role_uuid fields are arrays, so we encode them as JSON for the frontend
+            ?>
             <button type="button"
                     class="btn btn-sm border-0 bg-transparent p-0 text-secondary edit-user-btn"
                     data-uuid="<?= $korisnik['uuid'] ?>"
@@ -245,7 +249,7 @@ $search = $_GET['search'] ?? '';
                     data-username="<?= htmlspecialchars($korisnik['korisnicko_ime']) ?>"
                     data-email="<?= htmlspecialchars($korisnik['email']) ?>"
                     data-oib="<?= htmlspecialchars($korisnik['oib']) ?>"
-                    data-role-uuid="<?= htmlspecialchars($korisnik['role_uuid']) ?>"
+                    data-role-uuid='<?= json_encode($korisnik['role_uuid'] ?? []) ?>'
                     data-bs-toggle="modal"
                     data-bs-target="#editModal">
               <i class="bi bi-pencil-square"></i>
@@ -254,7 +258,13 @@ $search = $_GET['search'] ?? '';
           <td class="text-nowrap"><?= htmlspecialchars($korisnik['ime']) ?></td>
           <td class="text-nowrap"><?= htmlspecialchars($korisnik['prezime']) ?></td>
           <td class="text-nowrap"><?= htmlspecialchars($korisnik['korisnicko_ime']) ?></td>
-          <td class="text-nowrap"><?= htmlspecialchars($korisnik['role']) ?></td>
+         <td class="text-nowrap">
+            <?php
+            // HR: Prikaz svih rola korisnika (string spojen u SQL-u pomoću GROUP_CONCAT)
+            // EN: Display all user roles (string joined in SQL with GROUP_CONCAT)
+            echo htmlspecialchars($korisnik['roles'] ?? '');
+            ?>
+          </td>
           <td class="text-nowrap"><?= htmlspecialchars($korisnik['email']) ?></td>
           <td class="text-nowrap"><?= htmlspecialchars($korisnik['oib']) ?></td>
           <td class="text-nowrap">
@@ -393,7 +403,7 @@ $search = $_GET['search'] ?? '';
 // HR: Modal za uređivanje korisnika. Specifično uključuje podršku za prikaz grešaka validacije i automatsko ponovno otvaranje ako greške postoje.
 // EN: Modal for editing user details. Specifically includes support for displaying validation errors and automatically reopening if errors are present.
 ?>
-<div id="edit-verify" <?= (!empty($errors['editIme']) || !empty($errors['editPrezime']) || !empty($errors['editUsername']) || !empty($errors['editEmail']) || !empty($errors['editOib'])) ? 'data-has-edit-errors="1"' : '' ?>></div>
+<div id="edit-verify" <?= (!empty($errors['editIme']) || !empty($errors['editPrezime']) || !empty($errors['editUsername']) || !empty($errors['editEmail']) || !empty($errors['editOib']) || !empty($errors['editRole'])) ? 'data-has-edit-errors="1"' : '' ?>></div>
 <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
@@ -417,8 +427,10 @@ $search = $_GET['search'] ?? '';
           <?php if ($search !== ''): ?>
           <input type="hidden" name="search" value="<?= htmlspecialchars($search) ?>">
           <?php endif; ?>
+          <!-- HR: Prvi red - Ime, Prezime, Korisničko ime -->
+          <!-- EN: First row - First name, Last name, Username -->
           <div class="row">
-            <div class="col-md-6 mb-3">
+            <div class="col-md-4 mb-3">
               <label for="editIme" class="form-label"><?= _t('Ime') ?></label>
               <input type="text"
                      class="form-control<?= isset($errors['editIme']) ? ' is-invalid' : '' ?>"
@@ -430,7 +442,7 @@ $search = $_GET['search'] ?? '';
                 </div>
               <?php endif; ?>
             </div>
-            <div class="col-md-6 mb-3">
+            <div class="col-md-4 mb-3">
               <label for="editPrezime" class="form-label"><?= _t('Prezime') ?></label>
               <input type="text"
                      class="form-control<?= isset($errors['editPrezime']) ? ' is-invalid' : '' ?>"
@@ -442,10 +454,7 @@ $search = $_GET['search'] ?? '';
                 </div>
               <?php endif; ?>
             </div>
-          </div>
-
-          <div class="row">
-            <div class="col-md-6 mb-3">
+            <div class="col-md-4 mb-3">
               <label for="editUsername" class="form-label"><?= _t('Korisničko ime') ?></label>
               <input type="text"
                      class="form-control<?= isset($errors['editUsername']) ? ' is-invalid' : '' ?>"
@@ -457,6 +466,11 @@ $search = $_GET['search'] ?? '';
                 </div>
               <?php endif; ?>
             </div>
+          </div>
+
+          <!-- HR: Drugi red - E-mail, OIB -->
+          <!-- EN: Second row - Email, OIB -->
+          <div class="row">
             <div class="col-md-6 mb-3">
               <label for="editEmail" class="form-label"><?= _t('E-mail') ?></label>
               <input type="email"
@@ -469,9 +483,6 @@ $search = $_GET['search'] ?? '';
                 </div>
               <?php endif; ?>
             </div>
-          </div>
-
-          <div class="row">
             <div class="col-md-6 mb-3">
               <label for="editOib" class="form-label"><?= _t('OIB') ?></label>
               <input type="text"
@@ -484,18 +495,52 @@ $search = $_GET['search'] ?? '';
                 </div>
               <?php endif; ?>
             </div>
-            <div class="col-md-6 mb-3">
-              <label for="editRole" class="form-label"><?= _t('Rola') ?></label>
-              <select class="form-select<?= isset($errors['editRole']) ? ' is-invalid' : '' ?>" id="editRole" name="editRole" required>
+          </div>
+
+          <!-- HR: Treći red - Rola (checkboxovi u liniji) -->
+          <!-- EN: Third row - Roles (checkboxes inline) -->
+          <div class="row">
+            <div class="col-12 mb-3">
+              <label class="form-label"><?= _t('Rola') ?></label>
+              <?php
+              // HR: Bootstrap 5 switch checkboxes za odabir više rola, prikazani u liniji
+              // EN: Bootstrap 5 switch checkboxes for selecting multiple roles, displayed inline
+              ?>
+              <div>
                 <?php foreach (($roleOptions ?? []) as $rola): ?>
-                  <option value="<?= $rola->uuid ?>"
-                    <?php if (($old['editRole'] ?? '') == $rola->uuid): ?>selected<?php endif; ?>>
-                    <?= htmlspecialchars($rola->name) ?>
-                  </option>
+                  <?php
+                  $checked = false;
+                  if (isset($old['editRole'])) {
+                      $checked = is_array($old['editRole'])
+                          ? in_array($rola->uuid, $old['editRole'])
+                          : $old['editRole'] == $rola->uuid;
+                  } elseif (!empty($korisnik['role_uuid'])) {
+                      $userRoles = is_array($korisnik['role_uuid'])
+                          ? $korisnik['role_uuid']
+                          : json_decode($korisnik['role_uuid'], true);
+                      if (is_array($userRoles)) {
+                          $checked = in_array($rola->uuid, $userRoles);
+                      }
+                  }
+                  ?>
+                  <div class="form-check form-switch form-check-inline mb-1">
+                    <input
+                      class="form-check-input<?= isset($errors['editRole']) ? ' is-invalid' : '' ?>"
+                      type="checkbox"
+                      role="switch"
+                      id="editRole_<?= $rola->uuid ?>"
+                      name="editRole[]"
+                      value="<?= $rola->uuid ?>"
+                      <?php if ($checked): ?>checked<?php endif; ?>
+                    >
+                    <label class="form-check-label" for="editRole_<?= $rola->uuid ?>">
+                      <?= htmlspecialchars($rola->name) ?>
+                    </label>
+                  </div>
                 <?php endforeach; ?>
-              </select>
+              </div>
               <?php if (isset($errors['editRole'])): ?>
-                <div class="invalid-feedback">
+                <div class="invalid-feedback d-block">
                   <?= htmlspecialchars($errors['editRole']) ?>
                 </div>
               <?php endif; ?>

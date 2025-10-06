@@ -79,8 +79,11 @@ $router->registerMiddleware('admin', function () {
     header('Location: ' . App::urlFor('login.form'));
     return false;
   }
-  // HR: korisnik je prijavljen, ali nije Admin / EN: user is logged in but not Admin
-  if (($_SESSION['user']['role_name'] ?? '') !== 'Admin') {
+  // HR: korisnik je prijavljen, ali nema rolu Admin / EN: user is logged in but does not have Admin role
+  if (
+    empty($_SESSION['user']['roles']) ||
+    !in_array('Admin', array_column($_SESSION['user']['roles'], 'name'))
+  ) {
     header('Location: ' . App::urlFor('admin.forbidden'));
     return false;
   }
