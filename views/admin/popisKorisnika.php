@@ -90,7 +90,10 @@ $search = $_GET['search'] ?? '';
         // EN: Search input field for entering search term
         ?>
         <label for="search" class="visually-hidden"><?= _t('Pretraga korisnika') ?></label>
-        <input type="text" class="form-control" id="search" name="search" placeholder="<?= _t('Pretraži...') ?>" value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
+        <input type="text" class="form-control" id="search" name="search"
+               placeholder="<?= _t('Pretraži...') ?>"
+               value="<?= htmlspecialchars($_GET['search'] ?? '') ?>"
+               title="<?= _t('Pretraga po: ime, prezime, korisničko ime, role, email, OIB') ?>">
         <?php
         // HR: Gumb za pokretanje pretrage (ikona povećala)
         // EN: Button to start search (magnifier icon)
@@ -105,6 +108,17 @@ $search = $_GET['search'] ?? '';
             <i class="bi bi-x-lg"></i>
           </a>
         <?php endif; ?>
+        <?php
+        // HR: Gumb za CSV export odmah pored search inputa - UKLONJENO prema uputi
+        // EN: CSV export button next to search input - REMOVED as per instruction
+        $exportUrl = App::urlFor('admin.users.export') . '?per_page=' . urlencode($perPage)
+          . '&sort=' . urlencode($sort)
+          . '&dir=' . urlencode($dir)
+          . '&page=1';
+        if ($search !== '') {
+          $exportUrl .= '&search=' . urlencode($search);
+        }
+        ?>
       </div>
     </form>
   </div>
@@ -117,7 +131,9 @@ $search = $_GET['search'] ?? '';
     <table class="table table-striped table-bordered table-hover">
       <thead class="table-secondary">
       <tr>
-        <th class="text-center text-nowrap"></th>
+        <th class="text-center text-nowrap">
+          <a href="<?= $exportUrl ?>" title="<?= _t('Export u CSV') ?>" class="text-success"><i class="bi bi-table"></i></a>
+        </th>
         <th class="text-nowrap">
           <?= _t('Ime') ?>
           <?php if ($sort === 'ime' && $dir === 'asc'): ?>

@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "142e77e2cfc178620d75238d47e3fab5",
+    "content-hash": "00dc761afdf9d11b3f7c4ab76772f393",
     "packages": [
         {
             "name": "phpmailer/phpmailer",
-            "version": "v6.10.0",
+            "version": "v6.11.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPMailer/PHPMailer.git",
-                "reference": "bf74d75a1fde6beaa34a0ddae2ec5fce0f72a144"
+                "reference": "d9e3b36b47f04b497a0164c5a20f92acb4593284"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/bf74d75a1fde6beaa34a0ddae2ec5fce0f72a144",
-                "reference": "bf74d75a1fde6beaa34a0ddae2ec5fce0f72a144",
+                "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/d9e3b36b47f04b497a0164c5a20f92acb4593284",
+                "reference": "d9e3b36b47f04b497a0164c5a20f92acb4593284",
                 "shasum": ""
             },
             "require": {
@@ -38,6 +38,7 @@
             },
             "suggest": {
                 "decomplexity/SendOauth2": "Adapter for using XOAUTH2 authentication",
+                "ext-imap": "Needed to support advanced email address parsing according to RFC822",
                 "ext-mbstring": "Needed to send email in multibyte encoding charset or decode encoded addresses",
                 "ext-openssl": "Needed for secure SMTP sending and DKIM signing",
                 "greew/oauth2-azure-provider": "Needed for Microsoft Azure XOAUTH2 authentication",
@@ -77,7 +78,7 @@
             "description": "PHPMailer is a full-featured email creation and transfer class for PHP",
             "support": {
                 "issues": "https://github.com/PHPMailer/PHPMailer/issues",
-                "source": "https://github.com/PHPMailer/PHPMailer/tree/v6.10.0"
+                "source": "https://github.com/PHPMailer/PHPMailer/tree/v6.11.1"
             },
             "funding": [
                 {
@@ -85,7 +86,96 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-04-24T15:19:31+00:00"
+            "time": "2025-09-30T11:54:53+00:00"
+        },
+        {
+            "name": "twbs/bootstrap",
+            "version": "v5.3.8",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/twbs/bootstrap.git",
+                "reference": "25aa8cc0b32f0d1a54be575347e6d84b70b1acd7"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/twbs/bootstrap/zipball/25aa8cc0b32f0d1a54be575347e6d84b70b1acd7",
+                "reference": "25aa8cc0b32f0d1a54be575347e6d84b70b1acd7",
+                "shasum": ""
+            },
+            "replace": {
+                "twitter/bootstrap": "self.version"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Mark Otto",
+                    "email": "markdotto@gmail.com"
+                },
+                {
+                    "name": "Jacob Thornton",
+                    "email": "jacobthornton@gmail.com"
+                }
+            ],
+            "description": "The most popular front-end framework for developing responsive, mobile first projects on the web.",
+            "homepage": "https://getbootstrap.com/",
+            "keywords": [
+                "JS",
+                "css",
+                "framework",
+                "front-end",
+                "mobile-first",
+                "responsive",
+                "sass",
+                "web"
+            ],
+            "support": {
+                "issues": "https://github.com/twbs/bootstrap/issues",
+                "source": "https://github.com/twbs/bootstrap/tree/v5.3.8"
+            },
+            "time": "2025-08-26T02:01:02+00:00"
+        },
+        {
+            "name": "twbs/bootstrap-icons",
+            "version": "v1.13.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/twbs/icons.git",
+                "reference": "ce0e49dd063243118a115f17ad1fe1fe7576d552"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/twbs/icons/zipball/ce0e49dd063243118a115f17ad1fe1fe7576d552",
+                "reference": "ce0e49dd063243118a115f17ad1fe1fe7576d552",
+                "shasum": ""
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Mark Otto",
+                    "email": "markdotto@gmail.com"
+                }
+            ],
+            "description": "Official open source SVG icon library for Bootstrap",
+            "homepage": "https://icons.getbootstrap.com/",
+            "keywords": [
+                "bootstrap",
+                "icon font",
+                "icons",
+                "svg"
+            ],
+            "support": {
+                "issues": "https://github.com/twbs/icons/issues",
+                "source": "https://github.com/twbs/icons/tree/v1.13.1"
+            },
+            "time": "2025-05-09T23:01:19+00:00"
         }
     ],
     "packages-dev": [],

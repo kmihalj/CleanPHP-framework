@@ -9,7 +9,9 @@
       "phpmailer/phpmailer": "^6.9",
       "ext-mbstring": "*",
       "ext-ctype": "*",
-      "ext-intl": "*"
+      "ext-intl": "*",
+      "twbs/bootstrap": "^v5.3",
+      "twbs/bootstrap-icons": "^v1.13"
     },
     "autoload": {
         "psr-4": {
@@ -17,6 +19,20 @@
         },
         "files": [
             "src/helpers.php"
+        ]
+    },
+    "scripts": {
+        "post-install-cmd": [
+            "cp -R vendor/twbs/bootstrap/dist/js/bootstrap.bundle.min.js* public/js/",
+            "cp -R vendor/twbs/bootstrap/dist/css/bootstrap.min.css* public/css/",
+            "cp -R vendor/twbs/bootstrap-icons/font/bootstrap-icons.css public/css/",
+            "cp -R vendor/twbs/bootstrap-icons/font/fonts/* public/css/fonts"
+        ],
+        "post-update-cmd": [
+            "cp -R vendor/twbs/bootstrap/dist/js/bootstrap.bundle.min.js* public/js/",
+            "cp -R vendor/twbs/bootstrap/dist/css/bootstrap.min.css* public/css/",
+            "cp -R vendor/twbs/bootstrap-icons/font/bootstrap-icons.css public/css/",
+            "cp -R vendor/twbs/bootstrap-icons/font/fonts/* public/css/fonts"
         ]
     }
 }

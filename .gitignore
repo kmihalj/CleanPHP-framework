@@ -21,10 +21,11 @@ config/database.php
 config/mail.php
 
 # bootstrap
-public/css/fonts/
+public/css/fonts/bootstrap-icons.woff
+public/css/fonts/bootstrap-icons.woff2
 public/css/bootstrap.min.css
-public/css/bootstrap-icons.css
 public/css/bootstrap.min.css.map
+public/css/bootstrap-icons.css
 public/js/bootstrap.bundle.min.js
 public/js/bootstrap.bundle.min.js.map
 

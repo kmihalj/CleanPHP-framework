@@ -49,22 +49,28 @@ return function (Router $router) {
   $router->get('/passwordReset', [AuthController::class, 'zaboravljenaLozinka'])->name('passwordReset.form');
   $router->post('/passwordReset', [AuthController::class, 'zaboravljenaLozinkaPOST'])->name('passwordReset.submit');
 
-  // HR: Admin rute / EN: Admin routes
-  $router->get('/admin/forbidden', [AdminController::class, 'forbidden'])->name('admin.forbidden');
-  $router->get('/admin/users', [AdminController::class, 'popisKorisnika'], ['admin'])->name('admin.users');
-  // HR: Ruta za brisanje korisnika (admin) / EN: Route for deleting a user (admin)
-  $router->post('/admin/users/delete', [AdminController::class, 'brisanjeKorisnika'], ['admin'])->name('admin.users.delete');
-  // HR: Ruta za resetiranje lozinke korisnika (admin) / EN: Route for resetting a user's password (admin)
-  $router->post('/admin/users/reset-password', [AdminController::class, 'resetLozinkeKorisnika'], ['admin'])->name('admin.users.resetPassword');
-  // HR: Ruta za uređivanje korisnika (admin) / EN: Route for resetting a user's password (admin)
-  $router->post('/admin/users/edit', [AdminController::class, 'editKorisnika'], ['admin'])->name('admin.users.edit');
+  // HR: Ruta za zabranjeni pristup (admin) / EN: Forbidden access route (admin)
+  $router->get('/forbidden', [AdminController::class, 'forbidden'])->name('admin.forbidden');
 
-  // HR: Ruta za administraciju rola (admin) / EN: Route for role administration (admin)
-  $router->get('/admin/roles', [RolaController::class, 'index'], ['admin'])->name('admin.roles');
-  // HR: Ruta za dodavanje nove role (admin) / EN: Route for creating a new role (admin)
-  $router->post('/admin/roles', [RolaController::class, 'create'], ['admin'])->name('admin.roles.create');
-  // HR: Ruta za brisanje role (admin) / EN: Route for deleting a role (admin)
-  $router->post('/admin/roles/delete', [RolaController::class, 'delete'], ['admin'])->name('admin.roles.delete');
+  // HR: Admin rute / EN: Admin routes
+  $router->group('/admin', ['admin'], function (Router $router) {
+      $router->get('/users', [AdminController::class, 'popisKorisnika'])->name('admin.users');
+      // HR: Ruta za brisanje korisnika (admin) / EN: Route for deleting a user (admin)
+      $router->post('/users/delete', [AdminController::class, 'brisanjeKorisnika'])->name('admin.users.delete');
+      // HR: Ruta za resetiranje lozinke korisnika (admin) / EN: Route for resetting a user's password (admin)
+      $router->post('/users/reset-password', [AdminController::class, 'resetLozinkeKorisnika'])->name('admin.users.resetPassword');
+      // HR: Ruta za uređivanje korisnika (admin) / EN: Route for editing a user (admin)
+      $router->post('/users/edit', [AdminController::class, 'editKorisnika'])->name('admin.users.edit');
+    // HR: Ruta za export korisnika u CSV (admin) / EN: Route for exporting users to CSV (admin)
+    $router->get('/users/export', [AdminController::class, 'exportUsers'])->name('admin.users.export');
+
+      // HR: Ruta za administraciju rola (admin) / EN: Route for role administration (admin)
+      $router->get('/roles', [RolaController::class, 'index'])->name('admin.roles');
+      // HR: Ruta za dodavanje nove role (admin) / EN: Route for creating a new role (admin)
+      $router->post('/roles', [RolaController::class, 'create'])->name('admin.roles.create');
+      // HR: Ruta za brisanje role (admin) / EN: Route for deleting a role (admin)
+      $router->post('/roles/delete', [RolaController::class, 'delete'])->name('admin.roles.delete');
+  });
 
   // HR: Test rute grupirane pod /test / EN: Test routes grouped under /test
   $router->group('/test', [], function (Router $router) {

@@ -104,37 +104,7 @@ class AdminController extends Controller
 
     // HR: Izgradi SQL upit s JOIN-om na korisnik_rola i role, te grupiranjem rola po korisniku
     $orderBy = $allowedColumns[$sort] . ' ' . strtoupper($dir);
-    $sql = "SELECT korisnik.uuid AS uuid,
-                   korisnik.ime,
-                   korisnik.prezime,
-                   korisnik.oib,
-                   korisnik.korisnicko_ime,
-                   korisnik.email,
-                   korisnik.privremenaLozinka,
-                   korisnik.created_at AS created_at,
-                   GROUP_CONCAT(r.name ORDER BY r.name SEPARATOR ', ') AS roles,
-                   GROUP_CONCAT(r.uuid ORDER BY r.name SEPARATOR ',') AS role_uuid
-            FROM korisnik
-            LEFT JOIN korisnik_rola kr ON korisnik.uuid = kr.korisnik_uuid
-            LEFT JOIN role r ON kr.role_uuid = r.uuid";
-
-    // HR: Dodaje uvjet pretrage u SQL upit ako je pretraga aktivna
-    // EN: Adds search condition to SQL query if search is active
-    if (!empty($search)) {
-      $sql .= " WHERE ime LIKE :s1
-              OR prezime LIKE :s2
-              OR oib LIKE :s3
-              OR korisnicko_ime LIKE :s4
-              OR email LIKE :s5
-              OR EXISTS (
-                SELECT 1 FROM korisnik_rola kr2
-                JOIN role r2 ON kr2.role_uuid = r2.uuid
-                WHERE kr2.korisnik_uuid = korisnik.uuid AND r2.name LIKE :s6
-              )";
-    }
-
-    $sql .= " GROUP BY korisnik.uuid";
-    $sql .= " ORDER BY $orderBy";
+    $sql = $this->generateDefaultUserQuerry($search, $orderBy);
 
     $limit = null;
     $offset = null;
@@ -422,6 +392,85 @@ class AdminController extends Controller
     $this->redirectToUserList($perPage, $sort, $dir, $page, $search);
   }
 
+
+  /**
+   * HR: Export svih korisnika u CSV, uz poštivanje sort i search parametara (bez paginacije).
+   * EN: Export all users as CSV, respecting sort and search parameters (no pagination).
+   *
+   * @return void
+   */
+  public function exportUsers(): void
+  {
+    // Allowed columns for sorting
+    $allowedColumns = [
+      'ime' => 'korisnik.ime',
+      'prezime' => 'korisnik.prezime',
+      'korisnicko_ime' => 'korisnik.korisnicko_ime',
+      'email' => 'korisnik.email',
+      'role' => 'roles',
+      'created_at' => 'korisnik.created_at'
+    ];
+    $sort = $_GET['sort'] ?? 'prezime';
+    $dir = strtolower($_GET['dir'] ?? 'asc');
+    $search = $_GET['search'] ?? '';
+
+    // Validate sort param
+    if (!array_key_exists($sort, $allowedColumns)) {
+      $sort = 'prezime';
+    }
+    $dir = ($dir === 'desc') ? 'desc' : 'asc';
+    $orderBy = $allowedColumns[$sort] . ' ' . strtoupper($dir);
+
+    $sql = $this->generateDefaultUserQuerry($search, $orderBy);
+
+    $stmt = $this->pdo->prepare($sql);
+    if (!empty($search)) {
+      $this->bindSearchParams($stmt, $search);
+    }
+    $stmt->execute();
+    $korisnici = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // HR: HTTP zaglavlja za CSV (sprječavanje cache-a) / EN: CSV HTTP headers (disable caching)
+    header('Content-Type: text/csv; charset=UTF-8');
+    header('Content-Disposition: attachment; filename="korisnici.csv"');
+    header('Pragma: no-cache');
+    header('Expires: 0');
+
+    // HR: UTF-8 BOM radi Excel kompatibilnosti / EN: UTF-8 BOM for Excel compatibility
+    echo "\xEF\xBB\xBF";
+
+    $out = fopen('php://output', 'w');
+
+    // HR: Odabir praznog escape znaka izbjegava PHP 8.4 deprecations / EN: Empty escape avoids PHP 8.4 deprecations
+    $escape = '';
+
+    // HR: Zaglavlje CSV-a s ';' delimiterom / EN: CSV header row with ';' delimiter
+    fputcsv($out, [
+      'Ime', 'Prezime', 'Korisničko ime', 'Role', 'Email', 'OIB', 'Kreiran'
+    ], ';', '"', $escape);
+
+    foreach ($korisnici as $korisnik) {
+      // HR: Formatiranje datuma kreiranja / EN: Format created_at
+      $createdFormatted = '';
+      if (!empty($korisnik['created_at'])) {
+        $createdFormatted = date("d.m.Y H:i", strtotime($korisnik['created_at']));
+      }
+
+      fputcsv($out, [
+        $korisnik['ime'],
+        $korisnik['prezime'],
+        $korisnik['korisnicko_ime'],
+        $korisnik['roles'],
+        $korisnik['email'],
+        $korisnik['oib'],
+        $createdFormatted,
+      ], ';', '"', $escape);
+    }
+
+    fclose($out);
+    exit;
+  }
+
   /**
    * HR: HELPER Preusmjerava na popis korisnika s očuvanim parametrima, izuzimajući default vrijednosti.
    * EN: HELPER Redirects back to the user listing with preserved parameters, omitting defaults.
@@ -518,5 +567,42 @@ class AdminController extends Controller
     $stmt->bindValue(':s4', $like);
     $stmt->bindValue(':s5', $like);
     $stmt->bindValue(':s6', $like);
+  }
+
+  /**
+   * @param mixed $search
+   * @param string $orderBy
+   * @return string
+   */
+  private function generateDefaultUserQuerry(mixed $search, string $orderBy): string
+  {
+    $sql = "SELECT korisnik.uuid AS uuid,
+                   korisnik.ime,
+                   korisnik.prezime,
+                   korisnik.oib,
+                   korisnik.korisnicko_ime,
+                   korisnik.email,
+                   korisnik.privremenaLozinka,
+                   korisnik.created_at AS created_at,
+                   GROUP_CONCAT(r.name ORDER BY r.name SEPARATOR ', ') AS roles,
+                   GROUP_CONCAT(r.uuid ORDER BY r.name SEPARATOR ',') AS role_uuid
+            FROM korisnik
+            LEFT JOIN korisnik_rola kr ON korisnik.uuid = kr.korisnik_uuid
+            LEFT JOIN role r ON kr.role_uuid = r.uuid";
+    if (!empty($search)) {
+      $sql .= " WHERE ime LIKE :s1
+              OR prezime LIKE :s2
+              OR oib LIKE :s3
+              OR korisnicko_ime LIKE :s4
+              OR email LIKE :s5
+              OR EXISTS (
+                SELECT 1 FROM korisnik_rola kr2
+                JOIN role r2 ON kr2.role_uuid = r2.uuid
+                WHERE kr2.korisnik_uuid = korisnik.uuid AND r2.name LIKE :s6
+              )";
+    }
+    $sql .= " GROUP BY korisnik.uuid";
+    $sql .= " ORDER BY $orderBy";
+    return $sql;
   }
 }

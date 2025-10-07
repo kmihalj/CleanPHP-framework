@@ -155,4 +155,8 @@ Lijep pozdrav.',
   'Rola: %s ne može biti obrisana, ima ju %s korisnika' => 'Rola: %s ne može biti obrisana, ima ju %s korisnika',
   'Rola: %s ne može biti obrisana ! Broj korisnika koji ju koriste: %s' => 'Rola: %s ne može biti obrisana ! Broj korisnika koji ju koriste: %s',
   'Korisnik mora imati barem jednu rolu.' => 'Korisnik mora imati barem jednu rolu.',
+  'Pretraga po: ime, prezime, korisničko ime, role, email, OIB' => 'Pretraga po: ime, prezime, korisničko ime, role, email, OIB',
+  'Pretraga' => 'Pretraga',
+  'Izvezi CSV' => 'Izvezi CSV',
+  'Export u CSV' => 'Export u CSV',
 );
